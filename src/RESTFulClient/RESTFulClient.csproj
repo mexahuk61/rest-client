@@ -2,6 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.4</TargetFramework>
+    <Title>RESTful client</Title>
+    <Authors>Yury Shcherbakov</Authors>
+    <PackageTags>REST API Client RESTful</PackageTags>
+    <Description>Simple client for RESTful services which works with HTTP status codes.</Description>
+    <PackageProjectUrl>https://github.com/mexahuk61/rest-client</PackageProjectUrl>
+    <PackageIconUrl>https://github.com/mexahuk61/rest-client/raw/master/icon.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/mexahuk61/rest-client</RepositoryUrl>
+    <Version>1.0.0-beta</Version>
   </PropertyGroup>
 
   <ItemGroup>

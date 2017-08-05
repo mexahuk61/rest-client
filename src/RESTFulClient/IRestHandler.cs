@@ -2,7 +2,7 @@
 using System.Net;
 using System.Threading.Tasks;
 
-namespace RESTFulClient
+namespace RESTfulClient
 {
     public interface IRestHandler
     {

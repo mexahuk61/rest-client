@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace RESTFulClient
+namespace RESTfulClient
 {
     internal class RestHandler<TResponse> : IRestHandler<TResponse>
     {

@@ -1,4 +1,4 @@
-﻿namespace RESTFulClient
+﻿namespace RESTfulClient
 {
     public interface IRestClient
     {
