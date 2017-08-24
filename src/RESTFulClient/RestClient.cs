@@ -16,51 +16,34 @@ namespace RESTfulClient
         private readonly IQueryConverter _queryConverter;
 
         public RestClient(Uri baseAddress)
-            : this(baseAddress, new HttpClientHandler(), new RestJsonConverter(), new RestQueryConverter())
+            : this(baseAddress, options => { })
         {
         }
 
         public RestClient(Uri baseAddress, HttpMessageHandler messageHandler)
-            : this(baseAddress, messageHandler, new RestJsonConverter(), new RestQueryConverter())
+            : this(baseAddress, messageHandler, options => { })
         {
         }
 
-        public RestClient(Uri baseAddress, HttpMessageHandler messageHandler, IJsonConverter jsonConverter)
-            : this(baseAddress, messageHandler, jsonConverter, new RestQueryConverter())
-        {
-        }
-
-        public RestClient(Uri baseAddress, IJsonConverter jsonConverter)
-            : this(baseAddress, new HttpClientHandler(), jsonConverter, new RestQueryConverter())
-        {
-        }
-
-        public RestClient(Uri baseAddress, IQueryConverter queryConverter)
-            : this(baseAddress, new HttpClientHandler(), new RestJsonConverter(), queryConverter)
-        {
-        }
-
-        public RestClient(Uri baseAddress, HttpMessageHandler messageHandler, IQueryConverter queryConverter)
-            : this(baseAddress, messageHandler, new RestJsonConverter(), queryConverter)
-        {
-        }
-
-        public RestClient(Uri baseAddress, IJsonConverter jsonConverter, IQueryConverter queryConverter)
-            : this(baseAddress, new HttpClientHandler(), jsonConverter, queryConverter)
+        public RestClient(Uri baseAddress, Action<RestClientOptions> optionsAccessor)
+            : this(baseAddress, new HttpClientHandler(), optionsAccessor)
         {
         }
 
         public RestClient(Uri baseAddress, 
             HttpMessageHandler messageHandler,
-            IJsonConverter jsonConverter, 
-            IQueryConverter queryConverter)
+            Action<RestClientOptions> optionsAccessor)
         {
             _mediaType = "application/json";
+            
             _httpClient = new HttpClient(messageHandler) { BaseAddress = baseAddress };
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(_mediaType));
-            _jsonConverter = jsonConverter;
-            _queryConverter = queryConverter;
+
+            var options = new RestClientOptions();
+            optionsAccessor(options);
+            _jsonConverter = options.JsonConverter;
+            _queryConverter = options.QueryConverter;
         }
 
         //public Action<HttpClient> BeforeExecuted;
