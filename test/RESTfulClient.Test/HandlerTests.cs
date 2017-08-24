@@ -6,12 +6,12 @@ using Xunit;
 
 namespace RESTfulClient.Test
 {
-    public class TestHandler : BaseTest
+    public class HandlerTests : BaseTest
     {
         private readonly Uri _uri;
         private readonly string _path;
 
-        public TestHandler()
+        public HandlerTests()
         {
             _uri = new Uri("http://test/");
             _path = string.Empty;

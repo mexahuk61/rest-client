@@ -3,11 +3,11 @@ using Xunit;
 
 namespace RESTfulClient.Test
 {
-    public class TestConverters : BaseTest
+    public class ConvertersTests : BaseTest
     {
         private readonly RestQueryConverter _queryConverter;
 
-        public TestConverters()
+        public ConvertersTests()
         {
             _queryConverter = new RestQueryConverter();
         }

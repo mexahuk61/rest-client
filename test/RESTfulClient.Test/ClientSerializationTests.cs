@@ -7,12 +7,12 @@ using Xunit;
 
 namespace RESTfulClient.Test
 {
-    public class TestClientSerialization : BaseTest
+    public class ClientSerializationTests : BaseTest
     {
         private readonly Uri _uri;
         private readonly string _path;
 
-        public TestClientSerialization()
+        public ClientSerializationTests()
         {
             _uri = new Uri("http://test/");
             _path = string.Empty;
