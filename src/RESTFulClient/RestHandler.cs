@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using RESTfulClient.Converters;
 
@@ -9,11 +10,11 @@ namespace RESTfulClient
 {
     internal class RestHandler<TResponse> : IRestHandler<TResponse>
     {
-        private readonly Func<Task<HttpResponseMessage>> _request;
+        private readonly Func<CancellationToken, Task<HttpResponseMessage>> _request;
         private readonly Dictionary<HttpStatusCode, Action<string>> _сallbacks;
         private readonly IJsonConverter _jsonConverter;
 
-        public RestHandler(Func<Task<HttpResponseMessage>> request,
+        public RestHandler(Func<CancellationToken, Task<HttpResponseMessage>> request,
             IJsonConverter jsonConverter)
         {
             _request = request;
@@ -31,43 +32,52 @@ namespace RESTfulClient
             _сallbacks.Add(code, content => action(_jsonConverter.Deserialize<TReponse>(content)));
         }
 
-        public async Task SuccessAsync(Action action)
+        public Task SuccessAsync(Action action)
+            => SuccessAsync(action, CancellationToken.None);
+
+        public async Task SuccessAsync(Action action, CancellationToken cancellationToken)
         {
-            RestResponseMessage message = await HandleAsync();
-            if (message.IsSuccessStatusCode)
-            {
-                action();
-            }
+            RestResponseMessage message = await HandleAsync(cancellationToken);
+            if (!message.IsSuccessStatusCode) return;
+
+            action();
         }
 
-        public async Task SuccessAsync(Action<TResponse> action)
+        public Task SuccessAsync(Action<TResponse> action)
+            => SuccessAsync(action, CancellationToken.None);
+
+        public async Task SuccessAsync(Action<TResponse> action, CancellationToken cancellationToken)
         {
-            RestResponseMessage message = await HandleAsync();
-            if (message.IsSuccessStatusCode)
-            {
-                TResponse response = _jsonConverter.Deserialize<TResponse>(message.Content);
-                action(response);
-            }
+            RestResponseMessage message = await HandleAsync(cancellationToken);
+            if (!message.IsSuccessStatusCode) return;
+
+            TResponse response = _jsonConverter.Deserialize<TResponse>(message.Content);
+            action(response);
         }
 
-        async Task IRestHandler.ExecuteAsync()
+        Task IRestHandler.ExecuteAsync()
+            => ExecuteAsync(CancellationToken.None);
+
+        async Task IRestHandler.ExecuteAsync(CancellationToken cancellationToken)
         {
-            await HandleAsync();
+            await HandleAsync(cancellationToken);
         }
 
-        public async Task<TResponse> ExecuteAsync()
+        public Task<TResponse> ExecuteAsync()
+            => ExecuteAsync(CancellationToken.None);
+
+        public async Task<TResponse> ExecuteAsync(CancellationToken cancellationToken)
         {
-            RestResponseMessage message = await HandleAsync();
-            if (!message.IsSuccessStatusCode)
-                return default(TResponse);
+            RestResponseMessage message = await HandleAsync(cancellationToken);
+            if (!message.IsSuccessStatusCode) return default(TResponse);
             
             TResponse response = _jsonConverter.Deserialize<TResponse>(message.Content);
             return response;
         }
-        
-        private async Task<RestResponseMessage> HandleAsync()
+
+        private async Task<RestResponseMessage> HandleAsync(CancellationToken cancellationToken)
         {
-            HttpResponseMessage response = await _request();
+            HttpResponseMessage response = await _request(cancellationToken);
             string content = response.Content != null 
                 ? await response.Content.ReadAsStringAsync() 
                 : string.Empty;

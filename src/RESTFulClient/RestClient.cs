@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using RESTfulClient.Converters;
 
@@ -66,7 +67,7 @@ namespace RESTfulClient
 
         public IRestHandler<TResponse> Get<TResponse>(string url)
         {
-            Func<Task<HttpResponseMessage>> func = Request(() => _httpClient.GetAsync(url));
+            Func<CancellationToken, Task<HttpResponseMessage>> func = Request(token => _httpClient.GetAsync(url, token));
             return CreateHandler<TResponse>(func);
         }
 
@@ -77,7 +78,7 @@ namespace RESTfulClient
         public IRestHandler<TResponse> Post<TResponse>(string url, object request)
         {
             StringContent content = GetContent(request);
-            Func<Task<HttpResponseMessage>> func = Request(() => _httpClient.PostAsync(url, content));
+            Func<CancellationToken, Task<HttpResponseMessage>> func = Request(token => _httpClient.PostAsync(url, content, token));
             return CreateHandler<TResponse>(func);
         }
 
@@ -87,7 +88,7 @@ namespace RESTfulClient
         public IRestHandler<TResponse> Put<TResponse>(string url, object request)
         {
             StringContent content = GetContent(request);
-            Func<Task<HttpResponseMessage>> func = Request(() => _httpClient.PutAsync(url, content));
+            Func<CancellationToken, Task<HttpResponseMessage>> func = Request(token => _httpClient.PutAsync(url, content, token));
             return CreateHandler<TResponse>(func);
         }
 
@@ -96,7 +97,7 @@ namespace RESTfulClient
 
         public IRestHandler<TResponse> Delete<TResponse>(string url)
         {
-            Func<Task<HttpResponseMessage>> func = Request(() => _httpClient.DeleteAsync(url));
+            Func<CancellationToken, Task<HttpResponseMessage>> func = Request(token => _httpClient.DeleteAsync(url, token));
             return CreateHandler<TResponse>(func);
         }
 
@@ -109,13 +110,13 @@ namespace RESTfulClient
             return new StringContent(json, Encoding.UTF8, _mediaType);
         }
 
-        private Func<Task<HttpResponseMessage>> Request(Func<Task<HttpResponseMessage>> request)
+        private Func<CancellationToken, Task<HttpResponseMessage>> Request(Func<CancellationToken, Task<HttpResponseMessage>> request)
         {
             //BeforeExecuted?.Invoke(_httpClient);
             return request;
         }
 
-        private IRestHandler<TResponse> CreateHandler<TResponse>(Func<Task<HttpResponseMessage>> func)
+        private IRestHandler<TResponse> CreateHandler<TResponse>(Func<CancellationToken, Task<HttpResponseMessage>> func)
         {
             return new RestHandler<TResponse>(func, _jsonConverter);
         }
