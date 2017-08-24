@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using RESTfulClient.Converters;
 
 namespace RESTfulClient
 {
@@ -11,10 +11,13 @@ namespace RESTfulClient
     {
         private readonly Func<Task<HttpResponseMessage>> _request;
         private readonly Dictionary<HttpStatusCode, Action<string>> _сallbacks;
+        private readonly IJsonConverter _jsonConverter;
 
-        public RestHandler(Func<Task<HttpResponseMessage>> request)
+        public RestHandler(Func<Task<HttpResponseMessage>> request,
+            IJsonConverter jsonConverter)
         {
             _request = request;
+            _jsonConverter = jsonConverter;
             _сallbacks = new Dictionary<HttpStatusCode, Action<string>>();
         }
         
@@ -25,7 +28,7 @@ namespace RESTfulClient
 
         public void RegisterCallback<TReponse>(HttpStatusCode code, Action<TReponse> action)
         {
-            _сallbacks.Add(code, content => action(JsonConvert.DeserializeObject<TReponse>(content)));
+            _сallbacks.Add(code, content => action(_jsonConverter.Deserialize<TReponse>(content)));
         }
 
         public async Task SuccessAsync(Action action)
@@ -42,7 +45,7 @@ namespace RESTfulClient
             RestResponseMessage message = await HandleAsync();
             if (message.IsSuccessStatusCode)
             {
-                TResponse response = JsonConvert.DeserializeObject<TResponse>(message.Content);
+                TResponse response = _jsonConverter.Deserialize<TResponse>(message.Content);
                 action(response);
             }
         }
@@ -58,14 +61,16 @@ namespace RESTfulClient
             if (!message.IsSuccessStatusCode)
                 return default(TResponse);
             
-            TResponse response = JsonConvert.DeserializeObject<TResponse>(message.Content);
+            TResponse response = _jsonConverter.Deserialize<TResponse>(message.Content);
             return response;
         }
         
         private async Task<RestResponseMessage> HandleAsync()
         {
             HttpResponseMessage response = await _request();
-            string content = await response.Content.ReadAsStringAsync();
+            string content = response.Content != null 
+                ? await response.Content.ReadAsStringAsync() 
+                : string.Empty;
             HttpStatusCode code = response.StatusCode;
 
             if (code == HttpStatusCode.OK)

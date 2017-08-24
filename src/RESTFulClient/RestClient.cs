@@ -3,7 +3,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using RESTfulClient.Converters;
 
 namespace RESTfulClient
 {
@@ -11,64 +11,113 @@ namespace RESTfulClient
     {
         private readonly string _mediaType;
         private readonly HttpClient _httpClient;
+        private readonly IJsonConverter _jsonConverter;
+        private readonly IQueryConverter _queryConverter;
 
         public RestClient(Uri baseAddress)
+            : this(baseAddress, new HttpClientHandler(), new RestJsonConverter(), new RestQueryConverter())
         {
-            _mediaType = "application/json";
-            _httpClient = new HttpClient { BaseAddress = baseAddress };
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(_mediaType));
         }
 
-        public Action<HttpClient> BeforeExecuted;
+        public RestClient(Uri baseAddress, HttpMessageHandler messageHandler)
+            : this(baseAddress, messageHandler, new RestJsonConverter(), new RestQueryConverter())
+        {
+        }
+
+        public RestClient(Uri baseAddress, HttpMessageHandler messageHandler, IJsonConverter jsonConverter)
+            : this(baseAddress, messageHandler, jsonConverter, new RestQueryConverter())
+        {
+        }
+
+        public RestClient(Uri baseAddress, IJsonConverter jsonConverter)
+            : this(baseAddress, new HttpClientHandler(), jsonConverter, new RestQueryConverter())
+        {
+        }
+
+        public RestClient(Uri baseAddress, IQueryConverter queryConverter)
+            : this(baseAddress, new HttpClientHandler(), new RestJsonConverter(), queryConverter)
+        {
+        }
+
+        public RestClient(Uri baseAddress, HttpMessageHandler messageHandler, IQueryConverter queryConverter)
+            : this(baseAddress, messageHandler, new RestJsonConverter(), queryConverter)
+        {
+        }
+
+        public RestClient(Uri baseAddress, IJsonConverter jsonConverter, IQueryConverter queryConverter)
+            : this(baseAddress, new HttpClientHandler(), jsonConverter, queryConverter)
+        {
+        }
+
+        public RestClient(Uri baseAddress, 
+            HttpMessageHandler messageHandler,
+            IJsonConverter jsonConverter, 
+            IQueryConverter queryConverter)
+        {
+            _mediaType = "application/json";
+            _httpClient = new HttpClient(messageHandler) { BaseAddress = baseAddress };
+            _httpClient.DefaultRequestHeaders.Accept.Clear();
+            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(_mediaType));
+            _jsonConverter = jsonConverter;
+            _queryConverter = queryConverter;
+        }
+
+        //public Action<HttpClient> BeforeExecuted;
 
         public IRestHandler<TResponse> Get<TResponse>(string url)
         {
-            return new RestHandler<TResponse>(Request(() => _httpClient.GetAsync(url)));
+            Func<Task<HttpResponseMessage>> func = Request(() => _httpClient.GetAsync(url));
+            return CreateHandler<TResponse>(func);
         }
+
+        public IRestHandler<TResponse> Get<TResponse, TRequest>(string url, TRequest request)
+            where TRequest : class 
+            => Get<TResponse>(url + _queryConverter.Serialize(request));
 
         public IRestHandler<TResponse> Post<TResponse>(string url, object request)
         {
             StringContent content = GetContent(request);
-            return new RestHandler<TResponse>(Request(() => _httpClient.PostAsync(url, content)));
+            Func<Task<HttpResponseMessage>> func = Request(() => _httpClient.PostAsync(url, content));
+            return CreateHandler<TResponse>(func);
         }
 
-        public IRestHandler Post(string url, object request)
-        {
-            return Post<string>(url, request);
-        }
+        public IRestHandler Post(string url, object request) 
+            => Post<string>(url, request);
 
         public IRestHandler<TResponse> Put<TResponse>(string url, object request)
         {
             StringContent content = GetContent(request);
-            return new RestHandler<TResponse>(Request(() => _httpClient.PutAsync(url, content)));
+            Func<Task<HttpResponseMessage>> func = Request(() => _httpClient.PutAsync(url, content));
+            return CreateHandler<TResponse>(func);
         }
 
-        public IRestHandler Put(string url, object request)
-        {
-            return Put<string>(url, request);
-        }
-
-        private StringContent GetContent(object request)
-        {
-            string json = JsonConvert.SerializeObject(request);
-            return new StringContent(json, Encoding.UTF8, _mediaType);
-        }
+        public IRestHandler Put(string url, object request) 
+            => Put<string>(url, request);
 
         public IRestHandler<TResponse> Delete<TResponse>(string url)
         {
-            return new RestHandler<TResponse>(Request(() => _httpClient.DeleteAsync(url)));
+            Func<Task<HttpResponseMessage>> func = Request(() => _httpClient.DeleteAsync(url));
+            return CreateHandler<TResponse>(func);
+        }
+
+        public IRestHandler Delete(string url) 
+            => Delete<string>(url);
+
+        private StringContent GetContent(object request)
+        {
+            string json = _jsonConverter.Serialize(request);
+            return new StringContent(json, Encoding.UTF8, _mediaType);
         }
 
         private Func<Task<HttpResponseMessage>> Request(Func<Task<HttpResponseMessage>> request)
         {
-            BeforeExecuted?.Invoke(_httpClient);
+            //BeforeExecuted?.Invoke(_httpClient);
             return request;
         }
 
-        public IRestHandler Delete(string url)
+        private IRestHandler<TResponse> CreateHandler<TResponse>(Func<Task<HttpResponseMessage>> func)
         {
-            return Delete<string>(url);
+            return new RestHandler<TResponse>(func, _jsonConverter);
         }
 
         public void Dispose()

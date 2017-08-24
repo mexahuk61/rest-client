@@ -4,6 +4,9 @@
     {
         IRestHandler<TResponse> Get<TResponse>(string url);
 
+        IRestHandler<TResponse> Get<TResponse, TRequest>(string url, TRequest request)
+            where TRequest : class;
+
         IRestHandler<TResponse> Post<TResponse>(string url, object data);
 
         IRestHandler Post(string url, object data);
