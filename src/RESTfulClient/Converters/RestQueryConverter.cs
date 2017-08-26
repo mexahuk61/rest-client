@@ -24,8 +24,8 @@ namespace RESTfulClient.Converters
             foreach (PropertyInfo prop in request.GetType().GetTypeInfo().DeclaredProperties)
             {
                 object value = prop.GetValue(request, null);
-                if (value == null) continue;
-                string propName = prop.Name.ToLower();
+                if (!IsSerializebleField(prop, value)) continue;
+                string propName = prop.Name;
 
                 if (!IsEnumerableProperty(prop))
                 {
@@ -41,14 +41,22 @@ namespace RESTfulClient.Converters
             return nvc;
         }
 
+        public virtual bool IsSerializebleField(PropertyInfo prop, object value)
+        {
+            return !prop.GetMethod.IsPrivate 
+                && value != null;
+        }
+
         private bool IsEnumerableProperty(PropertyInfo propertyInfo)
         {
             Type propType = propertyInfo.PropertyType;
             return typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(propType.GetTypeInfo()) && propType != typeof(string);
         }
 
-        private KeyValuePair<string, string> GetKeyValue(string name, object value)
+        public virtual KeyValuePair<string, string> GetKeyValue(string propName, object value)
         {
+            var name = propName.ToLower();
+
             string val = value.ToString();
             if (value is bool
                 || value.GetType().GetTypeInfo().IsEnum)

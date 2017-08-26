@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RESTfulClient.Converters;
 using Xunit;
 
@@ -19,7 +20,8 @@ namespace RESTfulClient.Test
                 "?string=Value" +
                 "&bool=true" +
                 "&int=2" +
-                "&decimal=3%2C2" +
+                "&double=3%2C2" +
+                "&dec=3%2C2" +
                 "&enum=live" +
                 "&ienumerable=val" +
                 "&ienumerable=5" +
@@ -27,18 +29,44 @@ namespace RESTfulClient.Test
                 "&ienumerable=false" +
                 "&ienumerable=test";
 
-            var assert = new
+            var arrange = new TestClass
             {
                 String = "Value",
                 Bool = true,
                 Int = 2,
-                Decimal = 3.2,
+                Double = 3.2,
+                Dec = 3.2m,
                 Enum = TestEnum.Live,
-                IEnumerable = new object[] { "val", 5, 3.2, false, TestEnum.Test }
+                Ienumerable = new object[] { "val", 5, 3.2, false, TestEnum.Test },
+                PrivateRead = true,
+                NullField = null,
+                NullableField = true
             };
-            string act = _queryConverter.Serialize(assert);
+            string act = _queryConverter.Serialize(arrange);
             
             Assert.Equal(expected, act);
+        }
+
+        private class TestClass
+        {
+            public TestClass()
+            {
+                PrivateField = true;
+            }
+
+            private bool PrivateField { get; set; }
+
+            public string String { get; set; }
+            public bool Bool { get; set; }
+            public int Int { get; set; }
+            public double Double { get; set; }
+            public decimal Dec { get; set; }
+            public TestEnum Enum { get; set; }
+            public IEnumerable<object> Ienumerable { get; set; }
+
+            public bool PrivateRead { private get; set; }
+            public bool? NullField { get; set; }
+            public bool? NullableField { get; set; }
         }
 
         private enum TestEnum
