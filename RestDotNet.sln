@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+VisualStudioVersion = 15.0.26730.10
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RESTfulClient", "src\RESTfulClient\RESTfulClient.csproj", "{572A7B97-3B25-4A52-9FCA-243A044E4FE1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RestDotNet", "src\RestDotNet\RestDotNet.csproj", "{572A7B97-3B25-4A52-9FCA-243A044E4FE1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +18,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1E120B5D-17E6-45DA-B736-420E59B65ED9}
 	EndGlobalSection
 EndGlobal

@@ -1,4 +1,4 @@
-﻿namespace RESTfulClient
+﻿namespace RestDotNet
 {
     public interface IRestClient
     {
