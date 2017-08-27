@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\RESTfulClient\RESTfulClient.csproj" />
+    <ProjectReference Include="..\..\src\RestDotNet\RestDotNet.csproj" />
   </ItemGroup>
 
   <ItemGroup>

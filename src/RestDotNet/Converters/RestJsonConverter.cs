@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace RESTfulClient.Converters
+namespace RestDotNet.Converters
 {
     internal class RestJsonConverter : IJsonConverter
     {

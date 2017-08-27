@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace RESTfulClient.Test
+namespace RestDotNet.Tests
 {
     public class HandlerTests : BaseTest
     {

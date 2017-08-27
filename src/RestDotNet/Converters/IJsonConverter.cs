@@ -1,4 +1,4 @@
-﻿namespace RESTfulClient.Converters
+﻿namespace RestDotNet.Converters
 {
     public interface IJsonConverter
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-namespace RESTfulClient
+namespace RestDotNet
 {
     public class UnhandledResponseException : Exception
     {

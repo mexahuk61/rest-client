@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace RESTfulClient.Test
+namespace RestDotNet.Tests
 {
     public class ClientSerializationTests : BaseTest
     {

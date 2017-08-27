@@ -4,9 +4,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using RESTfulClient.Converters;
+using RestDotNet.Converters;
 
-namespace RESTfulClient
+namespace RestDotNet
 {
     public class RestClient : IRestClient, IDisposable
     {

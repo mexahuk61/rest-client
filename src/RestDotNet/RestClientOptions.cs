@@ -1,6 +1,6 @@
-﻿using RESTfulClient.Converters;
+﻿using RestDotNet.Converters;
 
-namespace RESTfulClient
+namespace RestDotNet
 {
     public class RestClientOptions
     {

@@ -6,7 +6,7 @@ using Moq;
 using Moq.Protected;
 using Newtonsoft.Json;
 
-namespace RESTfulClient.Test
+namespace RestDotNet.Tests
 {
     public abstract class BaseTest
     {

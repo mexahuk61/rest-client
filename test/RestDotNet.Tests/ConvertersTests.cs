@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using RESTfulClient.Converters;
+using RestDotNet.Converters;
 using Xunit;
 
-namespace RESTfulClient.Test
+namespace RestDotNet.Tests
 {
     public class ConvertersTests : BaseTest
     {

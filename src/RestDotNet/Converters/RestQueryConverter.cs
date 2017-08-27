@@ -5,7 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 
-namespace RESTfulClient.Converters
+namespace RestDotNet.Converters
 {
     public class RestQueryConverter : IQueryConverter
     {
