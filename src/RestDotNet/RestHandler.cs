@@ -22,73 +22,37 @@ namespace RestDotNet
             _сallbacks = new Dictionary<HttpStatusCode, Action<string>>();
         }
         
-        public void RegisterCallback(HttpStatusCode code, Action action)
-        {
-            _сallbacks.Add(code, content => action());
-        }
+        public void RegisterCallback(HttpStatusCode code, Action action) 
+            => _сallbacks.Add(code, content => action());
 
-        public void RegisterCallback<TReponse>(HttpStatusCode code, Action<TReponse> action)
-        {
-            _сallbacks.Add(code, content => action(_jsonConverter.Deserialize<TReponse>(content)));
-        }
-
-        public Task SuccessAsync(Action action)
-            => SuccessAsync(action, CancellationToken.None);
-
-        public async Task SuccessAsync(Action action, CancellationToken cancellationToken)
-        {
-            RestResponseMessage message = await HandleAsync(cancellationToken);
-            if (!message.IsSuccessStatusCode) return;
-
-            action();
-        }
-
-        public Task SuccessAsync(Action<TResponse> action)
-            => SuccessAsync(action, CancellationToken.None);
-
-        public async Task SuccessAsync(Action<TResponse> action, CancellationToken cancellationToken)
-        {
-            RestResponseMessage message = await HandleAsync(cancellationToken);
-            if (!message.IsSuccessStatusCode) return;
-
-            TResponse response = _jsonConverter.Deserialize<TResponse>(message.Content);
-            action(response);
-        }
+        public void RegisterCallback<TReponse>(HttpStatusCode code, Action<TReponse> action) 
+            => _сallbacks.Add(code, content => action(_jsonConverter.Deserialize<TReponse>(content)));
 
         Task IRestHandler.ExecuteAsync()
             => ExecuteAsync(CancellationToken.None);
 
-        async Task IRestHandler.ExecuteAsync(CancellationToken cancellationToken)
-        {
-            await HandleAsync(cancellationToken);
-        }
+        Task IRestHandler.ExecuteAsync(CancellationToken cancellationToken) 
+            => ExecuteAsync(cancellationToken);
 
         public Task<TResponse> ExecuteAsync()
             => ExecuteAsync(CancellationToken.None);
 
         public async Task<TResponse> ExecuteAsync(CancellationToken cancellationToken)
         {
-            RestResponseMessage message = await HandleAsync(cancellationToken);
-            if (!message.IsSuccessStatusCode) return default(TResponse);
-            
-            TResponse response = _jsonConverter.Deserialize<TResponse>(message.Content);
-            return response;
-        }
-
-        private async Task<RestResponseMessage> HandleAsync(CancellationToken cancellationToken)
-        {
             HttpResponseMessage response = await _request(cancellationToken);
-            string content = response.Content != null 
-                ? await response.Content.ReadAsStringAsync() 
+            string content = response.Content != null
+                ? await response.Content.ReadAsStringAsync()
                 : string.Empty;
             HttpStatusCode code = response.StatusCode;
 
-            if (code == HttpStatusCode.OK)
-                return new RestResponseMessage(true, content);
+            TResponse result = default(TResponse);
+            if (code == HttpStatusCode.OK && !_сallbacks.ContainsKey(code))
+                RegisterCallback(HttpStatusCode.OK, (TResponse res) => result = res);
 
             if (!_сallbacks.ContainsKey(code)) throw new UnhandledResponseException(code, content);
             _сallbacks[code](content);
-            return new RestResponseMessage(false, content);
+            
+            return result;
         }
     }
 }
