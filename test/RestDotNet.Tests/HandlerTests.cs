@@ -1,97 +1,109 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using RestDotNet.Converters;
 using Xunit;
 
 namespace RestDotNet.Tests
 {
     public class HandlerTests : BaseTest
     {
-        private readonly Uri _uri;
-        private readonly string _path;
+        private readonly RestJsonConverter _jsonConverter;
 
         public HandlerTests()
         {
-            _uri = new Uri("http://test/");
-            _path = string.Empty;
+            _jsonConverter = new RestJsonConverter();
         }
 
-        [Fact]
-        public async Task Execute_Success()
+        [Theory]
+        [MemberData(nameof(GetStatusCodes))]
+        public Task Throws_UnhandledResponseException_If_Not_Handled(HttpStatusCode code)
         {
-            int expected = 1;
-            HttpMessageHandler handler = CreateHandler(HttpStatusCode.OK, expected);
-            var client = new RestClient(_uri, handler);
-            IRestHandler<int> restHandler = client.Put<int>(_path, new { });
-            
-            int act = await restHandler.ExecuteAsync();
-            
+            IRestHandler handler = new RestHandler<object>(
+                token => Task.FromResult(new HttpResponseMessage(code)),
+                _jsonConverter);
+
+            return Assert.ThrowsAsync<UnhandledResponseException>(() => handler.HandleAsync());
+        }
+
+        [Theory]
+        [MemberData(nameof(GetStatusCodes))]
+        public Task Does_Not_Throws_UnhandledResponseException_If_Handled(HttpStatusCode code)
+        {
+            IRestHandler handler = new RestHandler<object>(
+                token => Task.FromResult(new HttpResponseMessage(code)),
+                _jsonConverter);
+            handler.RegisterCallback(code, () => {});
+
+            return handler.HandleAsync();
+        }
+
+        [Theory]
+        [MemberData(nameof(GetStatusCodes))]
+        public async Task Invoke_Typed_Callback_With_Content(HttpStatusCode code)
+        {
+            int[] expected = {1, 2, 3};
+            IList<int> act = default(IList<int>);
+            IRestHandler handler = new RestHandler<string>(
+                token => Task.FromResult(new HttpResponseMessage(code){ Content = new StringContent(_jsonConverter.Serialize(expected)) }),
+                _jsonConverter);
+            handler.RegisterCallback(code, (IList<int> list) => act = list);
+
+            await handler.HandleAsync();
             Assert.Equal(expected, act);
         }
 
-        [Fact]
-        public async Task Execute_UnhandledResponseException()
-        {
-            HttpMessageHandler handler = CreateHandler(HttpStatusCode.BadRequest, 1);
-            var client = new RestClient(_uri, handler);
-            IRestHandler<int> restHandler = client.Put<int>(_path, new { });
-            
-            await Assert.ThrowsAsync<UnhandledResponseException>(async () => await restHandler.ExecuteAsync());
-        }
-
-        [Fact]
-        public async Task Fluent_Success()
+        [Theory]
+        [MemberData(nameof(GetStatusCodes))]
+        public async Task Invoke_Untyped_Callback_With_Content(HttpStatusCode code)
         {
             int expected = 1;
-            HttpMessageHandler handler = CreateHandler(HttpStatusCode.OK, expected);
-            var client = new RestClient(_uri, handler);
-            IRestHandler<int> restHandler = client.Put<int>(_path, new { });
-            
-            int act = 0;
-            await restHandler.SuccessAsync(result => act = result);
-            
+            int act = default(int);
+            IRestHandler handler = new RestHandler<string>(
+                token => Task.FromResult(new HttpResponseMessage(code) { Content = new StringContent(_jsonConverter.Serialize(expected)) }),
+                _jsonConverter);
+            handler.RegisterCallback(code, () => act = expected);
+
+            await handler.HandleAsync();
             Assert.Equal(expected, act);
         }
 
-        [Fact]
-        public async Task Fluent_BadRequest()
+        [Theory]
+        [MemberData(nameof(GetStatusCodes))]
+        public Task Invoke_Typed_Callback_Without_Content_Throw_DeserializationException(HttpStatusCode code)
+        {
+            IRestHandler handler = new RestHandler<string>(
+                token => Task.FromResult(new HttpResponseMessage(code)),
+                _jsonConverter);
+            handler.RegisterCallback(code, (IList<int> list) => {});
+
+            return Assert.ThrowsAsync<DeserializationException>(() => handler.HandleAsync());
+        }
+
+        [Theory]
+        [MemberData(nameof(GetStatusCodes))]
+        public async Task Invoke_Untyped_Callback_Without_Content(HttpStatusCode code)
         {
             int expected = 1;
-            HttpMessageHandler handler = CreateHandler(HttpStatusCode.BadRequest, expected);
-            var client = new RestClient(_uri, handler);
-            IRestHandler restHandler = client.Put(_path, new { });
-            
-            int act = 0;
-            restHandler.BadRequest<int>(result => act = result);
-            await restHandler.SuccessAsync(() => { });
-            
+            int act = default(int);
+            IRestHandler handler = new RestHandler<string>(
+                token => Task.FromResult(new HttpResponseMessage(code)),
+                _jsonConverter);
+            handler.RegisterCallback(code, () => act = expected);
+
+            await handler.HandleAsync();
             Assert.Equal(expected, act);
         }
 
-        [Fact]
-        public async Task Fluent_NotSuccess()
+        private static IEnumerable<object[]> GetStatusCodes()
         {
-            int expected = 1;
-            HttpMessageHandler handler = CreateHandler(HttpStatusCode.BadRequest, expected);
-            var client = new RestClient(_uri, handler);
-            IRestHandler restHandler = client.Put(_path, new { });
-
-            int act = 0;
-            restHandler.BadRequest<int>(result => act = result);
-            await restHandler.SuccessAsync(() => act = 2);
-
-            Assert.Equal(expected, act);
-        }
-
-        [Fact]
-        public async Task Fluent_UnhandledResponseException()
-        {
-            HttpMessageHandler handler = CreateHandler(HttpStatusCode.BadRequest, 1);
-            var client = new RestClient(_uri, handler);
-            IRestHandler restHandler = client.Put(_path, new { });
-
-            await Assert.ThrowsAsync<UnhandledResponseException>(async () => await restHandler.SuccessAsync(() => { }));
+            return Enum.GetValues(typeof(HttpStatusCode))
+                .Cast<HttpStatusCode>()
+                .Select(code => new object[] { code });
         }
     }
 }
