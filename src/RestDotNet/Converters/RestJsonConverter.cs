@@ -1,12 +1,25 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace RestDotNet.Converters
 {
-    internal class RestJsonConverter : IJsonConverter
+    public class RestJsonConverter : IJsonConverter
     {
-        public T Deserialize<T>(string value)
+        public TResult Deserialize<TResult>(string value)
         {
-            return JsonConvert.DeserializeObject<T>(value);
+            if (string.IsNullOrWhiteSpace(value))
+                throw new DeserializationException("Failed to deserialize. Value is empty.");
+            try
+            {
+                return JsonConvert.DeserializeObject<TResult>(value);
+            }
+            catch (JsonException exception)
+            {
+                throw new DeserializationException(exception.Message);
+            }
         }
 
         public string Serialize(object value)
