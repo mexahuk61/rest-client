@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using RestDotNet.Converters;
 using Xunit;
 
 namespace RestDotNet.Tests
@@ -24,7 +24,7 @@ namespace RestDotNet.Tests
             int expected = 1;
             HttpMessageHandler handler = CreateHandler(HttpStatusCode.OK, expected);
             var client = new RestClient(_uri, handler);
-            IRestHandler<int> restHandler = client.Put<int>(_path, 0);
+            IResponse<int> restHandler = client.Put<int>(_path, 0);
 
             int act = await restHandler.ExecuteAsync();
             
@@ -36,9 +36,9 @@ namespace RestDotNet.Tests
         {
             HttpMessageHandler handler = CreateHandler(HttpStatusCode.OK);
             var client = new RestClient(_uri, handler);
-            IRestHandler<int> restHandler = client.Put<int>(_path, 0);
+            IResponse<int> restHandler = client.Put<int>(_path, 0);
 
-            await Assert.ThrowsAsync<JsonSerializationException>(async () => await restHandler.ExecuteAsync());
+            await Assert.ThrowsAsync<DeserializationException>(async () => await restHandler.ExecuteAsync());
         }
 
         [Fact]
@@ -46,7 +46,7 @@ namespace RestDotNet.Tests
         {
             HttpMessageHandler handler = CreateHandler(HttpStatusCode.OK, 1);
             var client = new RestClient(_uri, handler);
-            IRestHandler restHandler = client.Put(_path, 0);
+            IResponse restHandler = client.Put(_path, 0);
 
             await restHandler.ExecuteAsync();
         }
@@ -56,7 +56,7 @@ namespace RestDotNet.Tests
         {
             HttpMessageHandler handler = CreateHandler(HttpStatusCode.OK);
             var client = new RestClient(_uri, handler);
-            IRestHandler restHandler = client.Put(_path, 0);
+            IResponse restHandler = client.Put(_path, 0);
             
             await restHandler.ExecuteAsync();
         }

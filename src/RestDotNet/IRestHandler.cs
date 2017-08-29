@@ -15,8 +15,4 @@ namespace RestDotNet
 
         Task HandleAsync(CancellationToken cancellationToken);
     }
-
-    public interface IRestHandler<TReponse> : IRestHandler
-    {
-    }
 }

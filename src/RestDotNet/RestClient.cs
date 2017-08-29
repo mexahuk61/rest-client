@@ -13,7 +13,7 @@ namespace RestDotNet
         private readonly string _mediaType;
         private readonly HttpClient _httpClient;
         private readonly IJsonConverter _jsonConverter;
-        private readonly IQueryConverter _queryConverter;
+        //private readonly IQueryConverter _queryConverter;
 
         public RestClient(Uri baseAddress)
             : this(baseAddress, options => { })
@@ -43,44 +43,52 @@ namespace RestDotNet
             var options = new RestClientOptions();
             optionsAccessor(options);
             _jsonConverter = options.JsonConverter;
-            _queryConverter = options.QueryConverter;
+           // _queryConverter = options.QueryConverter;
         }
 
         public Action<HttpRequestHeaders> ModifyHeaders { private get; set; }
 
-        public IRestHandler<TResponse> Get<TResponse, TRequest>(string url, TRequest request)
-            where TRequest : class
-            => Get<TResponse>(url + _queryConverter.Serialize(request));
+        //public IResponse<TResponse> Get<TResponse, TRequest>(string url, TRequest request)
+        //    where TRequest : class
+        //    => Get<TResponse>(url + _queryConverter.Serialize(request));
 
-        public IRestHandler<TResponse> Get<TResponse>(string url)
+        public IResponse<TResponse> Get<TResponse>(string url)
         {
-            return CreateHandler<TResponse>(token => _httpClient.GetAsync(url, token));
+            return CreateResponse<TResponse>(token => _httpClient.GetAsync(url, token));
         }
 
-        public IRestHandler Post(string url, object request)
-            => Post<string>(url, request);
-
-        public IRestHandler<TResponse> Post<TResponse>(string url, object request)
+        public IResponse Post(string url, object request)
         {
             StringContent content = GetContent(request);
-            return CreateHandler<TResponse>(token => _httpClient.PostAsync(url, content, token));
+            return CreateResponse(token => _httpClient.PostAsync(url, content, token));
         }
 
-        public IRestHandler Put(string url, object request)
-            => Put<string>(url, request);
-
-        public IRestHandler<TResponse> Put<TResponse>(string url, object request)
+        public IResponse<TResponse> Post<TResponse>(string url, object request)
         {
             StringContent content = GetContent(request);
-            return CreateHandler<TResponse>(token => _httpClient.PutAsync(url, content, token));
+            return CreateResponse<TResponse>(token => _httpClient.PostAsync(url, content, token));
         }
 
-        public IRestHandler Delete(string url)
-            => Delete<string>(url);
-
-        public IRestHandler<TResponse> Delete<TResponse>(string url)
+        public IResponse Put(string url, object request)
         {
-            return CreateHandler<TResponse>(token => _httpClient.DeleteAsync(url, token));
+            StringContent content = GetContent(request);
+            return CreateResponse(token => _httpClient.PutAsync(url, content, token));
+        }
+
+        public IResponse<TResponse> Put<TResponse>(string url, object request)
+        {
+            StringContent content = GetContent(request);
+            return CreateResponse<TResponse>(token => _httpClient.PutAsync(url, content, token));
+        }
+
+        public IResponse Delete(string url)
+        {
+            return CreateResponse(token => _httpClient.DeleteAsync(url, token));
+        }
+
+        public IResponse<TResponse> Delete<TResponse>(string url)
+        {
+            return CreateResponse<TResponse>(token => _httpClient.DeleteAsync(url, token));
         }
 
         private StringContent GetContent(object request)
@@ -88,15 +96,31 @@ namespace RestDotNet
             string json = _jsonConverter.Serialize(request);
             return new StringContent(json, Encoding.UTF8, _mediaType);
         }
-
-        private IRestHandler<TResponse> CreateHandler<TResponse>(Func<CancellationToken, Task<HttpResponseMessage>> request)
+        
+        private IResponse CreateResponse(Func<CancellationToken, Task<HttpResponseMessage>> request)
         {
-            Func<CancellationToken, Task<HttpResponseMessage>> wrapper = token =>
+            Func<CancellationToken, Task<HttpResponseMessage>> wrapper = WrapRequest(request);
+            return new RestResponse(CreateHandler(wrapper));
+        }
+
+        private IResponse<TResponse> CreateResponse<TResponse>(Func<CancellationToken, Task<HttpResponseMessage>> request)
+        {
+            Func<CancellationToken, Task<HttpResponseMessage>> wrapper = WrapRequest(request);
+            return new RestResponse<TResponse>(CreateHandler(wrapper));
+        }
+
+        private Func<CancellationToken, Task<HttpResponseMessage>> WrapRequest(Func<CancellationToken, Task<HttpResponseMessage>> request)
+        {
+            return token =>
             {
                 ModifyHeaders?.Invoke(_httpClient.DefaultRequestHeaders);
                 return request(token);
             };
-            return new RestHandler<TResponse>(wrapper, _jsonConverter);
+        }
+
+        private IRestHandler CreateHandler(Func<CancellationToken, Task<HttpResponseMessage>> request)
+        {
+            return new RestHandler(request, _jsonConverter);
         }
 
         public void Dispose()

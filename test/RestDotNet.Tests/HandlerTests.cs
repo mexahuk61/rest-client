@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -20,10 +19,10 @@ namespace RestDotNet.Tests
         }
 
         [Theory]
-        [MemberData(nameof(GetStatusCodes))]
+        [MemberData(nameof(GetMemberData))]
         public Task Throws_UnhandledResponseException_If_Not_Handled(HttpStatusCode code)
         {
-            IRestHandler handler = new RestHandler<object>(
+            IRestHandler handler = new RestHandler(
                 token => Task.FromResult(new HttpResponseMessage(code)),
                 _jsonConverter);
 
@@ -31,10 +30,10 @@ namespace RestDotNet.Tests
         }
 
         [Theory]
-        [MemberData(nameof(GetStatusCodes))]
+        [MemberData(nameof(GetMemberData))]
         public Task Does_Not_Throws_UnhandledResponseException_If_Handled(HttpStatusCode code)
         {
-            IRestHandler handler = new RestHandler<object>(
+            IRestHandler handler = new RestHandler(
                 token => Task.FromResult(new HttpResponseMessage(code)),
                 _jsonConverter);
             handler.RegisterCallback(code, () => {});
@@ -43,27 +42,27 @@ namespace RestDotNet.Tests
         }
 
         [Theory]
-        [MemberData(nameof(GetStatusCodes))]
+        [MemberData(nameof(GetMemberData))]
         public async Task Invoke_Typed_Callback_With_Content(HttpStatusCode code)
         {
-            int[] expected = {1, 2, 3};
-            IList<int> act = default(IList<int>);
-            IRestHandler handler = new RestHandler<string>(
+            int expected = 1;
+            int act = default(int);
+            IRestHandler handler = new RestHandler(
                 token => Task.FromResult(new HttpResponseMessage(code){ Content = new StringContent(_jsonConverter.Serialize(expected)) }),
                 _jsonConverter);
-            handler.RegisterCallback(code, (IList<int> list) => act = list);
+            handler.RegisterCallback(code, (int content) => act = expected);
 
             await handler.HandleAsync();
             Assert.Equal(expected, act);
         }
 
         [Theory]
-        [MemberData(nameof(GetStatusCodes))]
+        [MemberData(nameof(GetMemberData))]
         public async Task Invoke_Untyped_Callback_With_Content(HttpStatusCode code)
         {
             int expected = 1;
             int act = default(int);
-            IRestHandler handler = new RestHandler<string>(
+            IRestHandler handler = new RestHandler(
                 token => Task.FromResult(new HttpResponseMessage(code) { Content = new StringContent(_jsonConverter.Serialize(expected)) }),
                 _jsonConverter);
             handler.RegisterCallback(code, () => act = expected);
@@ -73,24 +72,12 @@ namespace RestDotNet.Tests
         }
 
         [Theory]
-        [MemberData(nameof(GetStatusCodes))]
-        public Task Invoke_Typed_Callback_Without_Content_Throw_DeserializationException(HttpStatusCode code)
-        {
-            IRestHandler handler = new RestHandler<string>(
-                token => Task.FromResult(new HttpResponseMessage(code)),
-                _jsonConverter);
-            handler.RegisterCallback(code, (IList<int> list) => {});
-
-            return Assert.ThrowsAsync<DeserializationException>(() => handler.HandleAsync());
-        }
-
-        [Theory]
-        [MemberData(nameof(GetStatusCodes))]
+        [MemberData(nameof(GetMemberData))]
         public async Task Invoke_Untyped_Callback_Without_Content(HttpStatusCode code)
         {
             int expected = 1;
             int act = default(int);
-            IRestHandler handler = new RestHandler<string>(
+            IRestHandler handler = new RestHandler(
                 token => Task.FromResult(new HttpResponseMessage(code)),
                 _jsonConverter);
             handler.RegisterCallback(code, () => act = expected);
@@ -99,11 +86,48 @@ namespace RestDotNet.Tests
             Assert.Equal(expected, act);
         }
 
-        private static IEnumerable<object[]> GetStatusCodes()
+        [Theory]
+        [MemberData(nameof(GetMemberData))]
+        public Task Invoke_Typed_Callback_Without_Content_Throw_DeserializationException(HttpStatusCode code)
+        {
+            IRestHandler handler = new RestHandler(
+                token => Task.FromResult(new HttpResponseMessage(code)),
+                _jsonConverter);
+            handler.RegisterCallback(code, (IList<int> list) => {});
+
+            return Assert.ThrowsAsync<DeserializationException>(() => handler.HandleAsync());
+        }
+
+        [Theory]
+        [MemberData(nameof(GetMemberData))]
+        public async Task Invoke_Only_One_Callback(HttpStatusCode code)
+        {
+            List<HttpStatusCode> expected = new List<HttpStatusCode> { code };
+            List<HttpStatusCode> act = new List<HttpStatusCode>();
+            IRestHandler handler = new RestHandler(
+                token => Task.FromResult(new HttpResponseMessage(code)),
+                _jsonConverter);
+            handler.RegisterCallback(code, () => act.Add(code));
+            GetStatusCodes()
+                 .Where(statusCode => statusCode != code)
+                .ToList()
+                .ForEach(statusCode => handler.RegisterCallback(statusCode, () => act.Add(statusCode)));
+
+            await handler.HandleAsync();
+            Assert.Equal(expected, act);
+        }
+        
+        private static IEnumerable<object[]> GetMemberData()
+        {
+            return GetStatusCodes()
+                .Select(code => new object[] { code });
+        }
+        
+        private static IEnumerable<HttpStatusCode> GetStatusCodes()
         {
             return Enum.GetValues(typeof(HttpStatusCode))
                 .Cast<HttpStatusCode>()
-                .Select(code => new object[] { code });
+                .Distinct();
         }
     }
 }

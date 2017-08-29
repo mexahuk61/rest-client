@@ -8,7 +8,7 @@ using RestDotNet.Converters;
 
 namespace RestDotNet
 {
-    public class RestHandler<TResponse> : IRestHandler<TResponse>
+    public class RestHandler : IRestHandler
     {
         private readonly Func<CancellationToken, Task<HttpResponseMessage>> _request;
         private readonly Dictionary<HttpStatusCode, Action<string>> _сallbacks;
