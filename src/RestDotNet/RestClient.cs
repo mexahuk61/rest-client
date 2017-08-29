@@ -46,46 +46,42 @@ namespace RestDotNet
             _queryConverter = options.QueryConverter;
         }
 
-        //public Action<HttpClient> BeforeExecuted;
+        public Action<HttpRequestHeaders> ModifyHeaders { private get; set; }
+
+        public IRestHandler<TResponse> Get<TResponse, TRequest>(string url, TRequest request)
+            where TRequest : class
+            => Get<TResponse>(url + _queryConverter.Serialize(request));
 
         public IRestHandler<TResponse> Get<TResponse>(string url)
         {
-            Func<CancellationToken, Task<HttpResponseMessage>> func = Request(token => _httpClient.GetAsync(url, token));
-            return CreateHandler<TResponse>(func);
+            return CreateHandler<TResponse>(token => _httpClient.GetAsync(url, token));
         }
 
-        public IRestHandler<TResponse> Get<TResponse, TRequest>(string url, TRequest request)
-            where TRequest : class 
-            => Get<TResponse>(url + _queryConverter.Serialize(request));
+        public IRestHandler Post(string url, object request)
+            => Post<string>(url, request);
 
         public IRestHandler<TResponse> Post<TResponse>(string url, object request)
         {
             StringContent content = GetContent(request);
-            Func<CancellationToken, Task<HttpResponseMessage>> func = Request(token => _httpClient.PostAsync(url, content, token));
-            return CreateHandler<TResponse>(func);
+            return CreateHandler<TResponse>(token => _httpClient.PostAsync(url, content, token));
         }
 
-        public IRestHandler Post(string url, object request) 
-            => Post<string>(url, request);
+        public IRestHandler Put(string url, object request)
+            => Put<string>(url, request);
 
         public IRestHandler<TResponse> Put<TResponse>(string url, object request)
         {
             StringContent content = GetContent(request);
-            Func<CancellationToken, Task<HttpResponseMessage>> func = Request(token => _httpClient.PutAsync(url, content, token));
-            return CreateHandler<TResponse>(func);
+            return CreateHandler<TResponse>(token => _httpClient.PutAsync(url, content, token));
         }
 
-        public IRestHandler Put(string url, object request) 
-            => Put<string>(url, request);
+        public IRestHandler Delete(string url)
+            => Delete<string>(url);
 
         public IRestHandler<TResponse> Delete<TResponse>(string url)
         {
-            Func<CancellationToken, Task<HttpResponseMessage>> func = Request(token => _httpClient.DeleteAsync(url, token));
-            return CreateHandler<TResponse>(func);
+            return CreateHandler<TResponse>(token => _httpClient.DeleteAsync(url, token));
         }
-
-        public IRestHandler Delete(string url) 
-            => Delete<string>(url);
 
         private StringContent GetContent(object request)
         {
@@ -93,15 +89,14 @@ namespace RestDotNet
             return new StringContent(json, Encoding.UTF8, _mediaType);
         }
 
-        private Func<CancellationToken, Task<HttpResponseMessage>> Request(Func<CancellationToken, Task<HttpResponseMessage>> request)
+        private IRestHandler<TResponse> CreateHandler<TResponse>(Func<CancellationToken, Task<HttpResponseMessage>> request)
         {
-            //BeforeExecuted?.Invoke(_httpClient);
-            return request;
-        }
-
-        private IRestHandler<TResponse> CreateHandler<TResponse>(Func<CancellationToken, Task<HttpResponseMessage>> func)
-        {
-            return new RestHandler<TResponse>(func, _jsonConverter);
+            Func<CancellationToken, Task<HttpResponseMessage>> wrapper = token =>
+            {
+                ModifyHeaders?.Invoke(_httpClient.DefaultRequestHeaders);
+                return request(token);
+            };
+            return new RestHandler<TResponse>(wrapper, _jsonConverter);
         }
 
         public void Dispose()
