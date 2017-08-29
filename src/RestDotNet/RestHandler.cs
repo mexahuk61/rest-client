@@ -8,7 +8,7 @@ using RestDotNet.Converters;
 
 namespace RestDotNet
 {
-    internal class RestHandler<TResponse> : IRestHandler<TResponse>
+    public class RestHandler<TResponse> : IRestHandler<TResponse>
     {
         private readonly Func<CancellationToken, Task<HttpResponseMessage>> _request;
         private readonly Dictionary<HttpStatusCode, Action<string>> _сallbacks;
@@ -28,16 +28,10 @@ namespace RestDotNet
         public void RegisterCallback<TReponse>(HttpStatusCode code, Action<TReponse> action) 
             => _сallbacks.Add(code, content => action(_jsonConverter.Deserialize<TReponse>(content)));
 
-        Task IRestHandler.ExecuteAsync()
-            => ExecuteAsync(CancellationToken.None);
+        public Task HandleAsync()
+            => HandleAsync(CancellationToken.None);
 
-        Task IRestHandler.ExecuteAsync(CancellationToken cancellationToken) 
-            => ExecuteAsync(cancellationToken);
-
-        public Task<TResponse> ExecuteAsync()
-            => ExecuteAsync(CancellationToken.None);
-
-        public async Task<TResponse> ExecuteAsync(CancellationToken cancellationToken)
+        public async Task HandleAsync(CancellationToken cancellationToken)
         {
             HttpResponseMessage response = await _request(cancellationToken);
             string content = response.Content != null
@@ -45,14 +39,8 @@ namespace RestDotNet
                 : string.Empty;
             HttpStatusCode code = response.StatusCode;
 
-            TResponse result = default(TResponse);
-            if (code == HttpStatusCode.OK && !_сallbacks.ContainsKey(code))
-                RegisterCallback(HttpStatusCode.OK, (TResponse res) => result = res);
-
             if (!_сallbacks.ContainsKey(code)) throw new UnhandledResponseException(code, content);
             _сallbacks[code](content);
-            
-            return result;
         }
     }
 }

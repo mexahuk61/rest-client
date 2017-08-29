@@ -7,30 +7,45 @@ namespace RestDotNet
 {
     public static class RestHandlerExtensions
     {
+        public static Task<TResponse> ExecuteAsync<TResponse>(this IRestHandler<TResponse> restHandler) 
+            => ExecuteAsync(restHandler, CancellationToken.None);
+
+        public static async Task<TResponse> ExecuteAsync<TResponse>(this IRestHandler<TResponse> restHandler, CancellationToken cancellationToken)
+        {
+            TResponse result = default(TResponse);
+            restHandler.RegisterCallback(HttpStatusCode.OK, (TResponse response) => result = response);
+            await restHandler.HandleAsync(cancellationToken);
+            return result;
+        }
+
+        public static Task ExecuteAsync(this IRestHandler restHandler)
+            => ExecuteAsync(restHandler, CancellationToken.None);
+
+        public static Task ExecuteAsync(this IRestHandler restHandler, CancellationToken cancellationToken)
+        {
+            restHandler.RegisterCallback(HttpStatusCode.OK, () => {});
+            return restHandler.HandleAsync(cancellationToken);
+        }
+
+
+        public static Task SuccessAsync<TResponse>(this IRestHandler<TResponse> restHandler, Action<TResponse> action)
+            => SuccessAsync(restHandler, action, CancellationToken.None);
+
         public static Task SuccessAsync<TResponse>(this IRestHandler<TResponse> restHandler, Action<TResponse> action, CancellationToken cancellationToken)
         {
             restHandler.RegisterCallback(HttpStatusCode.OK, action);
-            return restHandler.ExecuteAsync(cancellationToken);
+            return restHandler.HandleAsync(cancellationToken);
         }
 
-        public static Task SuccessAsync<TResponse>(this IRestHandler<TResponse> restHandler, Action<TResponse> action)
-        {
-            restHandler.RegisterCallback(HttpStatusCode.OK, action);
-            return restHandler.ExecuteAsync();
-        }
+        public static Task SuccessAsync(this IRestHandler restHandler, Action action)
+            => SuccessAsync(restHandler, action, CancellationToken.None);
 
         public static Task SuccessAsync(this IRestHandler restHandler, Action action, CancellationToken cancellationToken)
         {
             restHandler.RegisterCallback(HttpStatusCode.OK, action);
-            return restHandler.ExecuteAsync(cancellationToken);
+            return restHandler.HandleAsync(cancellationToken);
         }
 
-        public static Task SuccessAsync(this IRestHandler restHandler, Action action)
-        {
-            restHandler.RegisterCallback(HttpStatusCode.OK, action);
-            return restHandler.ExecuteAsync();
-        }
-        
 
         public static IRestHandler<TResponse> BadRequest<TResponse, TErrorResponse>(this IRestHandler<TResponse> restHandler, Action<TErrorResponse> action)
         {

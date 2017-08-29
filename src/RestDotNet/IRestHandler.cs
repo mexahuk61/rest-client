@@ -11,15 +11,12 @@ namespace RestDotNet
 
         void RegisterCallback<TReponse>(HttpStatusCode code, Action<TReponse> action);
 
-        Task ExecuteAsync();
+        Task HandleAsync();
 
-        Task ExecuteAsync(CancellationToken cancellationToken);
+        Task HandleAsync(CancellationToken cancellationToken);
     }
 
     public interface IRestHandler<TReponse> : IRestHandler
     {
-        new Task<TReponse> ExecuteAsync();
-
-        new Task<TReponse> ExecuteAsync(CancellationToken cancellationToken);
     }
 }
