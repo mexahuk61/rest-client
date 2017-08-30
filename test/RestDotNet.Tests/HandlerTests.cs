@@ -3,120 +3,130 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
+using Moq;
 using RestDotNet.Converters;
 using Xunit;
 
 namespace RestDotNet.Tests
 {
-    public class HandlerTests : BaseTest
+    public class HandlerTests
     {
-        private readonly RestJsonConverter _jsonConverter;
+        private readonly IJsonConverter _jsonConverter;
 
         public HandlerTests()
         {
-            _jsonConverter = new RestJsonConverter();
+            var jsonConverterMock = new Mock<IJsonConverter>();
+            jsonConverterMock.Setup(converter => converter.Deserialize<object>(string.Empty))
+                .Throws<DeserializationException>();
+
+            _jsonConverter = jsonConverterMock.Object;
         }
 
         [Theory]
         [MemberData(nameof(GetMemberData))]
-        public Task Throws_UnhandledResponseException_If_Not_Handled(HttpStatusCode code)
+        public Task Throws_UnhandledResponseException_If_Code_Not_Handled(HttpStatusCode code)
         {
-            IRestHandler handler = new RestHandler(
-                token => Task.FromResult(new HttpResponseMessage(code)),
-                _jsonConverter);
+            IRestHandler handler = new RestHandler(CreateRequest(code), _jsonConverter);
 
             return Assert.ThrowsAsync<UnhandledResponseException>(() => handler.HandleAsync());
         }
 
         [Theory]
         [MemberData(nameof(GetMemberData))]
-        public Task Does_Not_Throws_UnhandledResponseException_If_Handled(HttpStatusCode code)
+        public Task Does_Not_Throws_UnhandledResponseException_If_Code_Handled(HttpStatusCode code)
         {
-            IRestHandler handler = new RestHandler(
-                token => Task.FromResult(new HttpResponseMessage(code)),
-                _jsonConverter);
-            handler.RegisterCallback(code, () => {});
-
+            IRestHandler handler = new RestHandler(CreateRequest(code), _jsonConverter);
+            handler.RegisterCallback(code, () => { });
             return handler.HandleAsync();
         }
 
         [Theory]
         [MemberData(nameof(GetMemberData))]
-        public async Task Invoke_Typed_Callback_With_Content(HttpStatusCode code)
+        public void Not_Invoke_Callback_Without_Handler_Execution(HttpStatusCode code)
         {
-            int expected = 1;
-            int act = default(int);
-            IRestHandler handler = new RestHandler(
-                token => Task.FromResult(new HttpResponseMessage(code){ Content = new StringContent(_jsonConverter.Serialize(expected)) }),
-                _jsonConverter);
-            handler.RegisterCallback(code, (int content) => act = expected);
+            bool act = false;
 
-            await handler.HandleAsync();
-            Assert.Equal(expected, act);
+            IRestHandler handler = new RestHandler(CreateRequest(code), _jsonConverter);
+            handler.RegisterCallback(code, (object content) => act = true);
+
+            Assert.False(act);
         }
 
         [Theory]
         [MemberData(nameof(GetMemberData))]
-        public async Task Invoke_Untyped_Callback_With_Content(HttpStatusCode code)
+        public async Task Invoke_Typed_Callback_When_Content_Presented(HttpStatusCode code)
         {
-            int expected = 1;
-            int act = default(int);
-            IRestHandler handler = new RestHandler(
-                token => Task.FromResult(new HttpResponseMessage(code) { Content = new StringContent(_jsonConverter.Serialize(expected)) }),
-                _jsonConverter);
-            handler.RegisterCallback(code, () => act = expected);
-
+            bool act = false;
+            
+            IRestHandler handler = new RestHandler(CreateRequest(code, true), _jsonConverter);
+            handler.RegisterCallback(code, (object content) => act = true);
             await handler.HandleAsync();
-            Assert.Equal(expected, act);
+
+            Assert.True(act);
         }
 
         [Theory]
         [MemberData(nameof(GetMemberData))]
-        public async Task Invoke_Untyped_Callback_Without_Content(HttpStatusCode code)
+        public async Task Invoke_Untyped_Callback_When_Content_Presented(HttpStatusCode code)
         {
-            int expected = 1;
-            int act = default(int);
-            IRestHandler handler = new RestHandler(
-                token => Task.FromResult(new HttpResponseMessage(code)),
-                _jsonConverter);
-            handler.RegisterCallback(code, () => act = expected);
+            bool act = false;
 
+            IRestHandler handler = new RestHandler(CreateRequest(code, true), _jsonConverter);
+            handler.RegisterCallback(code, () => act = true);
             await handler.HandleAsync();
-            Assert.Equal(expected, act);
+
+            Assert.True(act);
         }
 
         [Theory]
         [MemberData(nameof(GetMemberData))]
-        public Task Invoke_Typed_Callback_Without_Content_Throw_DeserializationException(HttpStatusCode code)
+        public async Task Invoke_Untyped_Callback_When_Content_Not_Presented(HttpStatusCode code)
         {
-            IRestHandler handler = new RestHandler(
-                token => Task.FromResult(new HttpResponseMessage(code)),
-                _jsonConverter);
-            handler.RegisterCallback(code, (IList<int> list) => {});
+            bool act = false;
+
+            IRestHandler handler = new RestHandler(CreateRequest(code), _jsonConverter);
+            handler.RegisterCallback(code, () => act = true);
+            await handler.HandleAsync();
+
+            Assert.True(act);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetMemberData))]
+        public Task Throws_DeserializationException_When_Typed_Callback_Invoked_But_Content_Not_Presented(HttpStatusCode code)
+        {
+            IRestHandler handler = new RestHandler(CreateRequest(code), _jsonConverter);
+            handler.RegisterCallback(code, (object list) => { });
 
             return Assert.ThrowsAsync<DeserializationException>(() => handler.HandleAsync());
         }
 
         [Theory]
         [MemberData(nameof(GetMemberData))]
-        public async Task Invoke_Only_One_Callback(HttpStatusCode code)
+        public async Task Only_Single_Callback_Invoked(HttpStatusCode code)
         {
             List<HttpStatusCode> expected = new List<HttpStatusCode> { code };
             List<HttpStatusCode> act = new List<HttpStatusCode>();
-            IRestHandler handler = new RestHandler(
-                token => Task.FromResult(new HttpResponseMessage(code)),
-                _jsonConverter);
+            
+            IRestHandler handler = new RestHandler(CreateRequest(code), _jsonConverter);
             handler.RegisterCallback(code, () => act.Add(code));
             GetStatusCodes()
-                 .Where(statusCode => statusCode != code)
+                .Where(statusCode => statusCode != code)
                 .ToList()
                 .ForEach(statusCode => handler.RegisterCallback(statusCode, () => act.Add(statusCode)));
-
             await handler.HandleAsync();
+
             Assert.Equal(expected, act);
         }
-        
+
+        private Func<CancellationToken, Task<HttpResponseMessage>> CreateRequest(HttpStatusCode code,
+            bool includeContent = false)
+        {
+            return message => Task.FromResult(new HttpResponseMessage(code) { Content = includeContent ? new StringContent("content") : null });
+        }
+
         private static IEnumerable<object[]> GetMemberData()
         {
             return GetStatusCodes()
