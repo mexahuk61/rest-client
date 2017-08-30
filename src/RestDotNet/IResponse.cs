@@ -12,10 +12,12 @@ namespace RestDotNet
         Task ExecuteAsync(CancellationToken cancellationToken);
     }
 
-    public interface IResponse<TResponse> : IResponse
+    public interface IResponse<TResponse>
     {
-        new Task<TResponse> ExecuteAsync();
+        IRestHandler Handler { get; }
 
-        new Task<TResponse> ExecuteAsync(CancellationToken cancellationToken);
+        Task<TResponse> ExecuteAsync();
+
+        Task<TResponse> ExecuteAsync(CancellationToken cancellationToken);
     }
 }
