@@ -7,11 +7,11 @@ using Xunit;
 
 namespace RestDotNet.Tests
 {
-    public class ResponseTests
+    public class RequestTests
     {
         private readonly Mock<IRestHandler> _mock;
 
-        public ResponseTests()
+        public RequestTests()
         {
             _mock = new Mock<IRestHandler>();
             _mock.Setup(handler => handler.RegisterCallback(HttpStatusCode.OK, It.IsAny<Action<object>>()))
