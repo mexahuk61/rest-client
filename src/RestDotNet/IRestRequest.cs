@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace RestDotNet
 {
-    public interface IResponse
+    public interface IRestRequest
     {
         IRestHandler Handler { get; }
 
@@ -12,7 +12,7 @@ namespace RestDotNet
         Task ExecuteAsync(CancellationToken cancellationToken);
     }
 
-    public interface IResponse<TResponse>
+    public interface IRestRequest<TResponse>
     {
         IRestHandler Handler { get; }
 

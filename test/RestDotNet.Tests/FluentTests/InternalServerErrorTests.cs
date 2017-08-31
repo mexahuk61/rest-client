@@ -11,13 +11,13 @@ namespace RestDotNet.Tests.FluentTests
         public override void Typed_Response_With_Content_Register_Callback()
         {
             TypedMock.Object.InternalServerError((object res) => { });
-            HandlerMock.Verify(response => response.RegisterCallback(HttpStatusCode.InternalServerError, It.IsAny<Action<object>>()), Times.Once);
+            HandlerMock.Verify(handler => handler.RegisterCallback(HttpStatusCode.InternalServerError, It.IsAny<Action<object>>()), Times.Once);
         }
 
         [Fact]
         public override void Typed_Response_With_Content_Return_The_Same()
         {
-            IResponse<object> act = TypedMock.Object.InternalServerError((object res) => { });
+            IRestRequest<object> act = TypedMock.Object.InternalServerError((object res) => { });
             Assert.Equal(TypedMock.Object, act);
         }
 
@@ -25,13 +25,13 @@ namespace RestDotNet.Tests.FluentTests
         public override void Typed_Response_Without_Content_Register_Callback()
         {
             TypedMock.Object.InternalServerError(() => { });
-            HandlerMock.Verify(response => response.RegisterCallback(HttpStatusCode.InternalServerError, It.IsAny<Action>()), Times.Once);
+            HandlerMock.Verify(handler => handler.RegisterCallback(HttpStatusCode.InternalServerError, It.IsAny<Action>()), Times.Once);
         }
 
         [Fact]
         public override void Typed_Response_Without_Content_Return_The_Same()
         {
-            IResponse<object> act = TypedMock.Object.InternalServerError(() => { });
+            IRestRequest<object> act = TypedMock.Object.InternalServerError(() => { });
             Assert.Equal(TypedMock.Object, act);
         }
 
@@ -39,13 +39,13 @@ namespace RestDotNet.Tests.FluentTests
         public override void Untyped_Response_With_Content_Register_Callback()
         {
             UntypedMock.Object.InternalServerError((object res) => { });
-            HandlerMock.Verify(response => response.RegisterCallback(HttpStatusCode.InternalServerError, It.IsAny<Action<object>>()), Times.Once);
+            HandlerMock.Verify(handler => handler.RegisterCallback(HttpStatusCode.InternalServerError, It.IsAny<Action<object>>()), Times.Once);
         }
 
         [Fact]
         public override void Untyped_Response_With_Content_Return_The_Same()
         {
-            IResponse act = UntypedMock.Object.InternalServerError((object res) => { });
+            IRestRequest act = UntypedMock.Object.InternalServerError((object res) => { });
             Assert.Equal(UntypedMock.Object, act);
         }
 
@@ -53,13 +53,13 @@ namespace RestDotNet.Tests.FluentTests
         public override void Untyped_Response_Without_Content_Register_Callback()
         {
             UntypedMock.Object.InternalServerError(() => { });
-            HandlerMock.Verify(response => response.RegisterCallback(HttpStatusCode.InternalServerError, It.IsAny<Action>()), Times.Once);
+            HandlerMock.Verify(handler => handler.RegisterCallback(HttpStatusCode.InternalServerError, It.IsAny<Action>()), Times.Once);
         }
 
         [Fact]
         public override void Untyped_Response_Without_Content_Return_The_Same()
         {
-            IResponse act = UntypedMock.Object.InternalServerError(() => { });
+            IRestRequest act = UntypedMock.Object.InternalServerError(() => { });
             Assert.Equal(UntypedMock.Object, act);
         }
     }

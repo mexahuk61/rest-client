@@ -21,8 +21,8 @@ namespace RestDotNet.Tests
         [Fact]
         public async Task Execution_Register_Success_Callbak()
         {
-            IResponse response = new RestResponse(_mock.Object);
-            await response.ExecuteAsync();
+            IRestRequest restRequest = new RestRequest(_mock.Object);
+            await restRequest.ExecuteAsync();
 
             _mock.Verify(handler => handler.RegisterCallback(HttpStatusCode.OK, It.IsAny<Action>()), Times.AtLeast(1));
         }
@@ -30,8 +30,8 @@ namespace RestDotNet.Tests
         [Fact]
         public async Task Execution_Invoke_Handle()
         {
-            IResponse response = new RestResponse(_mock.Object);
-            await response.ExecuteAsync();
+            IRestRequest restRequest = new RestRequest(_mock.Object);
+            await restRequest.ExecuteAsync();
 
             _mock.Verify(handler => handler.HandleAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -39,8 +39,8 @@ namespace RestDotNet.Tests
         [Fact]
         public async Task Typed_Execution_Register_Success_Callbak()
         {
-            IResponse<object> response = new RestResponse<object>(_mock.Object);
-            await response.ExecuteAsync();
+            IRestRequest<object> restRequest = new RestRequest<object>(_mock.Object);
+            await restRequest.ExecuteAsync();
 
             _mock.Verify(handler => handler.RegisterCallback(HttpStatusCode.OK, It.IsAny<Action<object>>()), Times.AtLeast(1));
         }
@@ -48,8 +48,8 @@ namespace RestDotNet.Tests
         [Fact]
         public async Task Typed_Execution_Invoke_Handle()
         {
-            IResponse<object> response = new RestResponse<object>(_mock.Object);
-            await response.ExecuteAsync();
+            IRestRequest<object> restRequest = new RestRequest<object>(_mock.Object);
+            await restRequest.ExecuteAsync();
 
             _mock.Verify(handler => handler.HandleAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -57,8 +57,8 @@ namespace RestDotNet.Tests
         [Fact]
         public async Task Typed_Execution_Provide_Value()
         {
-            IResponse<object> response = new RestResponse<object>(_mock.Object);
-            object act = await response.ExecuteAsync();
+            IRestRequest<object> restRequest = new RestRequest<object>(_mock.Object);
+            object act = await restRequest.ExecuteAsync();
 
             Assert.NotNull(act);
         }

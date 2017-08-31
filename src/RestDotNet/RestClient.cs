@@ -52,41 +52,41 @@ namespace RestDotNet
         //    where TRequest : class
         //    => Get<TResponse>(url + _queryConverter.Serialize(request));
 
-        public IResponse<TResponse> Get<TResponse>(string url)
+        public IRestRequest<TResponse> Get<TResponse>(string url)
         {
             return CreateResponse<TResponse>(token => _httpClient.GetAsync(url, token));
         }
 
-        public IResponse Post(string url, object request)
+        public IRestRequest Post(string url, object request)
         {
             StringContent content = GetContent(request);
             return CreateResponse(token => _httpClient.PostAsync(url, content, token));
         }
 
-        public IResponse<TResponse> Post<TResponse>(string url, object request)
+        public IRestRequest<TResponse> Post<TResponse>(string url, object request)
         {
             StringContent content = GetContent(request);
             return CreateResponse<TResponse>(token => _httpClient.PostAsync(url, content, token));
         }
 
-        public IResponse Put(string url, object request)
+        public IRestRequest Put(string url, object request)
         {
             StringContent content = GetContent(request);
             return CreateResponse(token => _httpClient.PutAsync(url, content, token));
         }
 
-        public IResponse<TResponse> Put<TResponse>(string url, object request)
+        public IRestRequest<TResponse> Put<TResponse>(string url, object request)
         {
             StringContent content = GetContent(request);
             return CreateResponse<TResponse>(token => _httpClient.PutAsync(url, content, token));
         }
 
-        public IResponse Delete(string url)
+        public IRestRequest Delete(string url)
         {
             return CreateResponse(token => _httpClient.DeleteAsync(url, token));
         }
 
-        public IResponse<TResponse> Delete<TResponse>(string url)
+        public IRestRequest<TResponse> Delete<TResponse>(string url)
         {
             return CreateResponse<TResponse>(token => _httpClient.DeleteAsync(url, token));
         }
@@ -97,16 +97,16 @@ namespace RestDotNet
             return new StringContent(json, Encoding.UTF8, _mediaType);
         }
         
-        private IResponse CreateResponse(Func<CancellationToken, Task<HttpResponseMessage>> request)
+        private IRestRequest CreateResponse(Func<CancellationToken, Task<HttpResponseMessage>> request)
         {
             Func<CancellationToken, Task<HttpResponseMessage>> wrapper = WrapRequest(request);
-            return new RestResponse(CreateHandler(wrapper));
+            return new RestRequest(CreateHandler(wrapper));
         }
 
-        private IResponse<TResponse> CreateResponse<TResponse>(Func<CancellationToken, Task<HttpResponseMessage>> request)
+        private IRestRequest<TResponse> CreateResponse<TResponse>(Func<CancellationToken, Task<HttpResponseMessage>> request)
         {
             Func<CancellationToken, Task<HttpResponseMessage>> wrapper = WrapRequest(request);
-            return new RestResponse<TResponse>(CreateHandler(wrapper));
+            return new RestRequest<TResponse>(CreateHandler(wrapper));
         }
 
         private Func<CancellationToken, Task<HttpResponseMessage>> WrapRequest(Func<CancellationToken, Task<HttpResponseMessage>> request)

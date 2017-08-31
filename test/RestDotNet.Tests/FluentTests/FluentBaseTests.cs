@@ -7,20 +7,20 @@ namespace RestDotNet.Tests.FluentTests
         protected FluentBaseTests()
         {
             HandlerMock = new Mock<IRestHandler>();
-            UntypedMock = new Mock<IResponse>();
-            UntypedMock.Setup(response => response.Handler)
+            UntypedMock = new Mock<IRestRequest>();
+            UntypedMock.Setup(request => request.Handler)
                 .Returns(HandlerMock.Object);
 
-            TypedMock = new Mock<IResponse<object>>();
-            TypedMock.Setup(response => response.Handler)
+            TypedMock = new Mock<IRestRequest<object>>();
+            TypedMock.Setup(request => request.Handler)
                 .Returns(HandlerMock.Object);
         }
 
         public Mock<IRestHandler> HandlerMock { get; }
 
-        public Mock<IResponse> UntypedMock { get; }
+        public Mock<IRestRequest> UntypedMock { get; }
 
-        public Mock<IResponse<object>> TypedMock { get; }
+        public Mock<IRestRequest<object>> TypedMock { get; }
 
         public abstract void Typed_Response_With_Content_Register_Callback();
 

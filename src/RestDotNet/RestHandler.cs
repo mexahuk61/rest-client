@@ -33,11 +33,11 @@ namespace RestDotNet
 
         public async Task HandleAsync(CancellationToken cancellationToken)
         {
-            HttpResponseMessage response = await _request(cancellationToken);
-            string content = response.Content != null
-                ? await response.Content.ReadAsStringAsync()
+            HttpResponseMessage message = await _request(cancellationToken);
+            string content = message.Content != null
+                ? await message.Content.ReadAsStringAsync()
                 : string.Empty;
-            HttpStatusCode code = response.StatusCode;
+            HttpStatusCode code = message.StatusCode;
 
             if (!_сallbacks.ContainsKey(code)) throw new UnhandledResponseException(code, content);
             _сallbacks[code](content);

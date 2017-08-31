@@ -28,7 +28,7 @@ namespace RestDotNet.Tests
             int expected = 1;
             HttpMessageHandler handler = CreateHandler(HttpStatusCode.OK, expected);
             var client = new RestClient(_uri, handler);
-            IResponse<int> restHandler = client.Put<int>(_path, 0);
+            IRestRequest<int> restHandler = client.Put<int>(_path, 0);
 
             int act = await restHandler.ExecuteAsync();
             
@@ -40,7 +40,7 @@ namespace RestDotNet.Tests
         {
             HttpMessageHandler handler = CreateHandler(HttpStatusCode.OK);
             var client = new RestClient(_uri, handler);
-            IResponse<int> restHandler = client.Put<int>(_path, 0);
+            IRestRequest<int> restHandler = client.Put<int>(_path, 0);
 
             await Assert.ThrowsAsync<DeserializationException>(async () => await restHandler.ExecuteAsync());
         }
@@ -50,7 +50,7 @@ namespace RestDotNet.Tests
         {
             HttpMessageHandler handler = CreateHandler(HttpStatusCode.OK, 1);
             var client = new RestClient(_uri, handler);
-            IResponse restHandler = client.Put(_path, 0);
+            IRestRequest restHandler = client.Put(_path, 0);
 
             await restHandler.ExecuteAsync();
         }
@@ -60,21 +60,21 @@ namespace RestDotNet.Tests
         {
             HttpMessageHandler handler = CreateHandler(HttpStatusCode.OK);
             var client = new RestClient(_uri, handler);
-            IResponse restHandler = client.Put(_path, 0);
+            IRestRequest restHandler = client.Put(_path, 0);
             
             await restHandler.ExecuteAsync();
         }
 
         private HttpMessageHandler CreateHandler(HttpStatusCode code, object expectedResponse = null)
         {
-            var response = new HttpResponseMessage(code);
+            var message = new HttpResponseMessage(code);
             if (expectedResponse != null)
-                response.Content = new StringContent(JsonConvert.SerializeObject(expectedResponse));
+                message.Content = new StringContent(JsonConvert.SerializeObject(expectedResponse));
 
             var handler = new Mock<HttpMessageHandler>();
             handler.Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-                .Returns(Task.FromResult(response));
+                .Returns(Task.FromResult(message));
             return handler.Object;
         }
     }

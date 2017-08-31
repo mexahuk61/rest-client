@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 
 namespace RestDotNet
 {
-    public class RestResponse : IResponse
+    public class RestRequest : IRestRequest
     {
-        public RestResponse(IRestHandler handler)
+        public RestRequest(IRestHandler handler)
         {
             Handler = handler;
         }
@@ -23,9 +23,9 @@ namespace RestDotNet
         }
     }
 
-    public class RestResponse<TResponse> : RestResponse, IResponse<TResponse>
+    public class RestRequest<TResponse> : RestRequest, IRestRequest<TResponse>
     {
-        public RestResponse(IRestHandler handler)
+        public RestRequest(IRestHandler handler)
             : base(handler)
         {
         }
