@@ -4,7 +4,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using RestDotNet.Converters;
+using RestDotNet.Deserializers;
+using RestDotNet.Serializers;
 
 namespace RestDotNet
 {
@@ -12,8 +13,9 @@ namespace RestDotNet
     {
         private readonly string _mediaType;
         private readonly HttpClient _httpClient;
-        private readonly IJsonConverter _jsonConverter;
-        //private readonly IQueryConverter _queryConverter;
+        private readonly ISerializer _jsonConverter;
+
+        private readonly IDeserializerFactory _deserializerFactory;
 
         public RestClient(Uri baseAddress)
             : this(baseAddress, options => { })
@@ -43,7 +45,7 @@ namespace RestDotNet
             var options = new RestClientOptions();
             optionsAccessor(options);
             _jsonConverter = options.JsonConverter;
-           // _queryConverter = options.QueryConverter;
+            _deserializerFactory = options.DeserializerFactory;
         }
 
         public Action<HttpRequestHeaders> ModifyHeaders { private get; set; }
@@ -120,7 +122,7 @@ namespace RestDotNet
 
         private IRestHandler CreateHandler(Func<CancellationToken, Task<HttpResponseMessage>> request)
         {
-            return new RestHandler(request, _jsonConverter);
+            return new RestHandler(request, _deserializerFactory);
         }
 
         public void Dispose()

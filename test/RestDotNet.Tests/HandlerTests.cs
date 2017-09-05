@@ -6,29 +6,34 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
-using RestDotNet.Converters;
+using RestDotNet.Deserializers;
 using Xunit;
 
 namespace RestDotNet.Tests
 {
     public class HandlerTests
     {
-        private readonly IJsonConverter _jsonConverter;
+        private readonly IDeserializerFactory _deserializerFactory;
 
         public HandlerTests()
         {
-            var jsonConverterMock = new Mock<IJsonConverter>();
-            jsonConverterMock.Setup(converter => converter.Deserialize<object>(string.Empty))
+            var deserializerMock = new Mock<IDeserializer>();
+            deserializerMock.Setup(deserializer => deserializer.ContentType).Returns("application/json");
+            deserializerMock.Setup(converter => converter.Deserialize<object>(string.Empty))
                 .Throws<DeserializationException>();
 
-            _jsonConverter = jsonConverterMock.Object;
+            var deserializerFactoryMock = new Mock<IDeserializerFactory>();
+            deserializerFactoryMock.Setup(factory => factory.GetDeserializer(It.IsAny<string>()))
+                .Returns(deserializerMock.Object);
+
+            _deserializerFactory = deserializerFactoryMock.Object;
         }
 
         [Theory]
         [MemberData(nameof(GetMemberData))]
         public Task Throws_UnhandledResponseException_If_Code_Not_Handled(HttpStatusCode code)
         {
-            IRestHandler handler = new RestHandler(CreateRequest(code), _jsonConverter);
+            IRestHandler handler = new RestHandler(CreateRequest(code), _deserializerFactory);
 
             return Assert.ThrowsAsync<UnhandledResponseException>(() => handler.HandleAsync());
         }
@@ -37,7 +42,7 @@ namespace RestDotNet.Tests
         [MemberData(nameof(GetMemberData))]
         public Task Does_Not_Throws_UnhandledResponseException_If_Code_Handled(HttpStatusCode code)
         {
-            IRestHandler handler = new RestHandler(CreateRequest(code), _jsonConverter);
+            IRestHandler handler = new RestHandler(CreateRequest(code), _deserializerFactory);
             handler.RegisterCallback(code, () => { });
             return handler.HandleAsync();
         }
@@ -48,7 +53,7 @@ namespace RestDotNet.Tests
         {
             bool act = false;
 
-            IRestHandler handler = new RestHandler(CreateRequest(code), _jsonConverter);
+            IRestHandler handler = new RestHandler(CreateRequest(code), _deserializerFactory);
             handler.RegisterCallback(code, (object content) => act = true);
 
             Assert.False(act);
@@ -60,7 +65,7 @@ namespace RestDotNet.Tests
         {
             bool act = false;
             
-            IRestHandler handler = new RestHandler(CreateRequest(code, true), _jsonConverter);
+            IRestHandler handler = new RestHandler(CreateRequest(code, true), _deserializerFactory);
             handler.RegisterCallback(code, (object content) => act = true);
             await handler.HandleAsync();
 
@@ -73,7 +78,7 @@ namespace RestDotNet.Tests
         {
             bool act = false;
 
-            IRestHandler handler = new RestHandler(CreateRequest(code, true), _jsonConverter);
+            IRestHandler handler = new RestHandler(CreateRequest(code, true), _deserializerFactory);
             handler.RegisterCallback(code, () => act = true);
             await handler.HandleAsync();
 
@@ -86,7 +91,7 @@ namespace RestDotNet.Tests
         {
             bool act = false;
 
-            IRestHandler handler = new RestHandler(CreateRequest(code), _jsonConverter);
+            IRestHandler handler = new RestHandler(CreateRequest(code), _deserializerFactory);
             handler.RegisterCallback(code, () => act = true);
             await handler.HandleAsync();
 
@@ -97,7 +102,7 @@ namespace RestDotNet.Tests
         [MemberData(nameof(GetMemberData))]
         public Task Throws_DeserializationException_When_Typed_Callback_Invoked_But_Content_Not_Presented(HttpStatusCode code)
         {
-            IRestHandler handler = new RestHandler(CreateRequest(code), _jsonConverter);
+            IRestHandler handler = new RestHandler(CreateRequest(code), _deserializerFactory);
             handler.RegisterCallback(code, (object list) => { });
 
             return Assert.ThrowsAsync<DeserializationException>(() => handler.HandleAsync());
@@ -110,7 +115,7 @@ namespace RestDotNet.Tests
             List<HttpStatusCode> expected = new List<HttpStatusCode> { code };
             List<HttpStatusCode> act = new List<HttpStatusCode>();
             
-            IRestHandler handler = new RestHandler(CreateRequest(code), _jsonConverter);
+            IRestHandler handler = new RestHandler(CreateRequest(code), _deserializerFactory);
             handler.RegisterCallback(code, () => act.Add(code));
             GetStatusCodes()
                 .Where(statusCode => statusCode != code)

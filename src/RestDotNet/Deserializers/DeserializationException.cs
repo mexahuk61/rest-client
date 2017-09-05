@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RestDotNet.Converters
+namespace RestDotNet.Deserializers
 {
     public class DeserializationException : Exception
     {

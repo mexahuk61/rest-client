@@ -4,29 +4,29 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using RestDotNet.Converters;
+using RestDotNet.Deserializers;
 
 namespace RestDotNet
 {
     public class RestHandler : IRestHandler
     {
         private readonly Func<CancellationToken, Task<HttpResponseMessage>> _request;
-        private readonly Dictionary<HttpStatusCode, Action<string>> _сallbacks;
-        private readonly IJsonConverter _jsonConverter;
+        private readonly IDeserializerFactory _deserializerFactory;
+        private readonly Dictionary<HttpStatusCode, Action<IDeserializer, string>> _сallbacks;
 
         public RestHandler(Func<CancellationToken, Task<HttpResponseMessage>> request,
-            IJsonConverter jsonConverter)
+            IDeserializerFactory deserializerFactory)
         {
             _request = request;
-            _jsonConverter = jsonConverter;
-            _сallbacks = new Dictionary<HttpStatusCode, Action<string>>();
+            _deserializerFactory = deserializerFactory;
+            _сallbacks = new Dictionary<HttpStatusCode, Action<IDeserializer, string>>();
         }
         
         public void RegisterCallback(HttpStatusCode code, Action action) 
-            => _сallbacks.Add(code, content => action());
+            => _сallbacks.Add(code, (deserializer, content) => action());
 
         public void RegisterCallback<TReponse>(HttpStatusCode code, Action<TReponse> action) 
-            => _сallbacks.Add(code, content => action(_jsonConverter.Deserialize<TReponse>(content)));
+            => _сallbacks.Add(code, (deserializer, content) => action(deserializer.Deserialize<TReponse>(content)));
 
         public Task HandleAsync()
             => HandleAsync(CancellationToken.None);
@@ -40,7 +40,8 @@ namespace RestDotNet
             HttpStatusCode code = message.StatusCode;
 
             if (!_сallbacks.ContainsKey(code)) throw new UnhandledResponseException(code, content);
-            _сallbacks[code](content);
+            IDeserializer deserializer = _deserializerFactory.GetDeserializer(message.Content?.Headers.ContentType.MediaType);
+            _сallbacks[code](deserializer, content);
         }
     }
 }

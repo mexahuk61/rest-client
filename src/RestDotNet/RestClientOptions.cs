@@ -1,4 +1,5 @@
-﻿using RestDotNet.Converters;
+﻿using RestDotNet.Deserializers;
+using RestDotNet.Serializers;
 
 namespace RestDotNet
 {
@@ -6,12 +7,14 @@ namespace RestDotNet
     {
         public RestClientOptions()
         {
-            JsonConverter = new RestJsonConverter();
-            QueryConverter = new RestQueryConverter();
+            JsonConverter = new JsonSerializer();
+            
+            DeserializerFactory = new DeserializerFactory();
+            DeserializerFactory.AddDeserializer(new JsonDeserializer());
         }
 
-        public IJsonConverter JsonConverter { get; set; }
+        public ISerializer JsonConverter { get; set; }
 
-        public IQueryConverter QueryConverter { get; set; }
+        public IDeserializerFactory DeserializerFactory { get; }
     }
 }

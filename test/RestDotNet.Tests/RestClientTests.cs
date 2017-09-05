@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Moq;
 using Moq.Protected;
 using Newtonsoft.Json;
-using RestDotNet.Converters;
+using RestDotNet.Deserializers;
 using Xunit;
 
 namespace RestDotNet.Tests
