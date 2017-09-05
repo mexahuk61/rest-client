@@ -6,20 +6,20 @@ namespace RestDotNet.Deserializers
 {
     public class DeserializerFactory : IDeserializerFactory
     {
-        private const string DefaultDeserializer = "application/json";
-
         private readonly IList<IDeserializer> _deserializers;
+        private readonly IDeserializer _defaultDeserializer;
 
-        public DeserializerFactory()
+        public DeserializerFactory(IDeserializer defaultDeserializer)
         {
-            _deserializers = new List<IDeserializer>();
+            _deserializers = new List<IDeserializer> { defaultDeserializer };
+            _defaultDeserializer = defaultDeserializer;
         }
 
         public IDeserializer GetDeserializer(string contentType)
         {
-            if (Enumerable.All<IDeserializer>(_deserializers, d => d.ContentType != contentType))
-                return Enumerable.First<IDeserializer>(_deserializers, d => d.ContentType == DefaultDeserializer);
-            return Enumerable.Last<IDeserializer>(_deserializers, d => d.ContentType == contentType);
+            return _deserializers.All(d => d.ContentType != contentType) 
+                ? _defaultDeserializer
+                : _deserializers.Last(d => d.ContentType == contentType);
         }
 
         public void AddDeserializer(IDeserializer deserializer)

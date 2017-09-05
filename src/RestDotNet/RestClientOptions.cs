@@ -7,13 +7,11 @@ namespace RestDotNet
     {
         public RestClientOptions()
         {
-            JsonConverter = new JsonSerializer();
-            
-            DeserializerFactory = new DeserializerFactory();
-            DeserializerFactory.AddDeserializer(new JsonDeserializer());
+            DefaultSerializer = new JsonSerializer();
+            DeserializerFactory = new DeserializerFactory(new JsonDeserializer());
         }
 
-        public ISerializer JsonConverter { get; set; }
+        public ISerializer DefaultSerializer { get; }
 
         public IDeserializerFactory DeserializerFactory { get; }
     }
