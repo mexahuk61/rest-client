@@ -1,6 +1,8 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
@@ -69,7 +71,9 @@ namespace RestDotNet.Tests.Client
         {
             var message = new HttpResponseMessage(code);
             if (expectedResponse != null)
-                message.Content = new StringContent(JsonConvert.SerializeObject(expectedResponse));
+            {
+                message.Content = new StringContent(JsonConvert.SerializeObject(expectedResponse), Encoding.UTF8, "application/json");
+            }
 
             var handler = new Mock<HttpMessageHandler>();
             handler.Protected()
