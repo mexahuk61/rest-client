@@ -29,24 +29,24 @@ namespace RestDotNet
 
         public IRestRequest CreateRequest(string uri, HttpMethod httpMethod)
         {
-            return CreateRequest(token => _client.SendAsync(new HttpRequestMessage(HttpMethod.Put, uri), token));
+            return CreateRequest(token => _client.SendAsync(new HttpRequestMessage(httpMethod, uri), token));
         }
 
         public IRestRequest CreateRequest(string uri, HttpMethod httpMethod, object content)
         {
             StringContent stringContent = GetContent(content);
-            return CreateRequest(token => _client.SendAsync(new HttpRequestMessage(HttpMethod.Put, uri) {Content = stringContent}, token));
+            return CreateRequest(token => _client.SendAsync(new HttpRequestMessage(httpMethod, uri) {Content = stringContent}, token));
         }
 
         public IRestRequest<TResponse> CreateRequest<TResponse>(string uri, HttpMethod httpMethod)
         {
-            return CreateRequest<TResponse>(token => _client.SendAsync(new HttpRequestMessage(HttpMethod.Put, uri), token));
+            return CreateRequest<TResponse>(token => _client.SendAsync(new HttpRequestMessage(httpMethod, uri), token));
         }
 
         public IRestRequest<TResponse> CreateRequest<TResponse>(string uri, HttpMethod httpMethod, object content)
         {
             StringContent stringContent = GetContent(content);
-            return CreateRequest<TResponse>(token => _client.SendAsync(new HttpRequestMessage(HttpMethod.Put, uri) { Content = stringContent }, token));
+            return CreateRequest<TResponse>(token => _client.SendAsync(new HttpRequestMessage(httpMethod, uri) { Content = stringContent }, token));
         }
 
         private StringContent GetContent(object request)

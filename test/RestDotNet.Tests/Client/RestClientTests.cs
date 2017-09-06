@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 using RestDotNet.Deserializers;
 using Xunit;
 
-namespace RestDotNet.Tests
+namespace RestDotNet.Tests.Client
 {
     public class RestClientTests
     {
