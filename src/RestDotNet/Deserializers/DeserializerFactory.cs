@@ -15,6 +15,11 @@ namespace RestDotNet.Deserializers
             _defaultDeserializer = defaultDeserializer;
         }
 
+        public IEnumerable<IDeserializer> GetDeserializers()
+        {
+            return _deserializers;
+        }
+
         public IDeserializer GetDeserializer(string contentType)
         {
             return _deserializers.All(d => d.ContentType != contentType) 
