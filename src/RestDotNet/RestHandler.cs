@@ -2,78 +2,46 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using RestDotNet.Deserializers;
 
 namespace RestDotNet
 {
-    internal class RestHandler<TResponse> : IRestHandler<TResponse>
+    public class RestHandler : IRestHandler
     {
-        private readonly Func<Task<HttpResponseMessage>> _request;
-        private readonly Dictionary<HttpStatusCode, Action<string>> _сallbacks;
+        private readonly Func<CancellationToken, Task<HttpResponseMessage>> _request;
+        private readonly IDeserializerFactory _deserializerFactory;
+        private readonly Dictionary<HttpStatusCode, Action<IDeserializer, string>> _сallbacks;
 
-        public RestHandler(Func<Task<HttpResponseMessage>> request)
+        public RestHandler(Func<CancellationToken, Task<HttpResponseMessage>> request,
+            IDeserializerFactory deserializerFactory)
         {
             _request = request;
-            _сallbacks = new Dictionary<HttpStatusCode, Action<string>>();
+            _deserializerFactory = deserializerFactory;
+            _сallbacks = new Dictionary<HttpStatusCode, Action<IDeserializer, string>>();
         }
         
-        public void RegisterCallback(HttpStatusCode code, Action action)
-        {
-            _сallbacks.Add(code, content => action());
-        }
+        public void RegisterCallback(HttpStatusCode code, Action action) 
+            => _сallbacks.Add(code, (deserializer, content) => action());
 
-        public void RegisterCallback<TReponse>(HttpStatusCode code, Action<TReponse> action)
-        {
-            _сallbacks.Add(code, content => action(JsonConvert.DeserializeObject<TReponse>(content)));
-        }
+        public void RegisterCallback<TReponse>(HttpStatusCode code, Action<TReponse> action) 
+            => _сallbacks.Add(code, (deserializer, content) => action(deserializer.Deserialize<TReponse>(content)));
 
-        public async Task SuccessAsync(Action action)
-        {
-            RestResponseMessage message = await HandleAsync();
-            if (message.IsSuccessStatusCode)
-            {
-                action();
-            }
-        }
+        public Task HandleAsync()
+            => HandleAsync(CancellationToken.None);
 
-        public async Task SuccessAsync(Action<TResponse> action)
+        public async Task HandleAsync(CancellationToken cancellationToken)
         {
-            RestResponseMessage message = await HandleAsync();
-            if (message.IsSuccessStatusCode)
-            {
-                TResponse response = JsonConvert.DeserializeObject<TResponse>(message.Content);
-                action(response);
-            }
-        }
-
-        async Task IRestHandler.ExecuteAsync()
-        {
-            await HandleAsync();
-        }
-
-        public async Task<TResponse> ExecuteAsync()
-        {
-            RestResponseMessage message = await HandleAsync();
-            if (!message.IsSuccessStatusCode)
-                return default(TResponse);
-            
-            TResponse response = JsonConvert.DeserializeObject<TResponse>(message.Content);
-            return response;
-        }
-        
-        private async Task<RestResponseMessage> HandleAsync()
-        {
-            HttpResponseMessage response = await _request();
-            string content = await response.Content.ReadAsStringAsync();
-            HttpStatusCode code = response.StatusCode;
-
-            if (code == HttpStatusCode.OK)
-                return new RestResponseMessage(true, content);
+            HttpResponseMessage message = await _request(cancellationToken);
+            string content = message.Content != null
+                ? await message.Content.ReadAsStringAsync()
+                : string.Empty;
+            HttpStatusCode code = message.StatusCode;
 
             if (!_сallbacks.ContainsKey(code)) throw new UnhandledResponseException(code, content);
-            _сallbacks[code](content);
-            return new RestResponseMessage(false, content);
+            IDeserializer deserializer = _deserializerFactory.GetDeserializer(message.Content?.Headers.ContentType.MediaType);
+            _сallbacks[code](deserializer, content);
         }
     }
 }

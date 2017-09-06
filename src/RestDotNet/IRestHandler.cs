@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RestDotNet
@@ -10,15 +11,8 @@ namespace RestDotNet
 
         void RegisterCallback<TReponse>(HttpStatusCode code, Action<TReponse> action);
 
-        Task SuccessAsync(Action action);
+        Task HandleAsync();
 
-        Task ExecuteAsync();
-    }
-
-    public interface IRestHandler<TReponse> : IRestHandler
-    {
-        Task SuccessAsync(Action<TReponse> action);
-
-        new Task<TReponse> ExecuteAsync();
+        Task HandleAsync(CancellationToken cancellationToken);
     }
 }

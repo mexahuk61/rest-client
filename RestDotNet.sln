@@ -3,7 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.10
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D5269950-6414-48D3-AE4D-EC799E171419}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F9183C9D-BB0D-484A-8460-FA414E2BBB19}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RestDotNet", "src\RestDotNet\RestDotNet.csproj", "{572A7B97-3B25-4A52-9FCA-243A044E4FE1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RestDotNet.Tests", "test\RestDotNet.Tests\RestDotNet.Tests.csproj", "{1D4589F2-26AA-4084-B7D6-6270121B924E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,9 +21,17 @@ Global
 		{572A7B97-3B25-4A52-9FCA-243A044E4FE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{572A7B97-3B25-4A52-9FCA-243A044E4FE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{572A7B97-3B25-4A52-9FCA-243A044E4FE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D4589F2-26AA-4084-B7D6-6270121B924E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D4589F2-26AA-4084-B7D6-6270121B924E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D4589F2-26AA-4084-B7D6-6270121B924E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D4589F2-26AA-4084-B7D6-6270121B924E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{572A7B97-3B25-4A52-9FCA-243A044E4FE1} = {D5269950-6414-48D3-AE4D-EC799E171419}
+		{1D4589F2-26AA-4084-B7D6-6270121B924E} = {F9183C9D-BB0D-484A-8460-FA414E2BBB19}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1E120B5D-17E6-45DA-B736-420E59B65ED9}

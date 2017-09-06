@@ -2,18 +2,18 @@
 {
     public interface IRestClient
     {
-        IRestHandler<TResponse> Get<TResponse>(string url);
+        IRestRequest<TResponse> Get<TResponse>(string uri);
 
-        IRestHandler<TResponse> Post<TResponse>(string url, object data);
+        IRestRequest<TResponse> Post<TResponse>(string uri, object data);
 
-        IRestHandler Post(string url, object data);
+        IRestRequest Post(string uri, object data);
 
-        IRestHandler<TResponse> Put<TResponse>(string url, object data);
+        IRestRequest<TResponse> Put<TResponse>(string uri, object data);
 
-        IRestHandler Put(string url, object data);
+        IRestRequest Put(string uri, object data);
 
-        IRestHandler<TResponse> Delete<TResponse>(string url);
+        IRestRequest<TResponse> Delete<TResponse>(string uri);
 
-        IRestHandler Delete(string url);
+        IRestRequest Delete(string uri);
     }
 }

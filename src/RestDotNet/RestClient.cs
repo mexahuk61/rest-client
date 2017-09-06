@@ -1,79 +1,77 @@
 ﻿using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace RestDotNet
 {
     public class RestClient : IRestClient, IDisposable
     {
-        private readonly string _mediaType;
-        private readonly HttpClient _httpClient;
+        private readonly HttpClient _client;
+        private readonly RequestBuilder _requestBuilder;
+        private Action<HttpRequestHeaders> _headersModifyer;
 
         public RestClient(Uri baseAddress)
+            : this(baseAddress, options => { })
         {
-            _mediaType = "application/json";
-            _httpClient = new HttpClient { BaseAddress = baseAddress };
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(_mediaType));
         }
 
-        public Action<HttpClient> BeforeExecuted;
-
-        public IRestHandler<TResponse> Get<TResponse>(string url)
+        public RestClient(Uri baseAddress, HttpMessageHandler messageHandler)
+            : this(baseAddress, messageHandler, options => { })
         {
-            return new RestHandler<TResponse>(Request(() => _httpClient.GetAsync(url)));
         }
 
-        public IRestHandler<TResponse> Post<TResponse>(string url, object request)
+        public RestClient(Uri baseAddress, Action<RestClientOptions> optionsAccessor)
+            : this(baseAddress, new HttpClientHandler(), optionsAccessor)
         {
-            StringContent content = GetContent(request);
-            return new RestHandler<TResponse>(Request(() => _httpClient.PostAsync(url, content)));
         }
 
-        public IRestHandler Post(string url, object request)
+        public RestClient(Uri baseAddress, 
+            HttpMessageHandler messageHandler,
+            Action<RestClientOptions> optionsAccessor)
         {
-            return Post<string>(url, request);
+            _client = new HttpClient(messageHandler) { BaseAddress = baseAddress };
+            //_client.DefaultRequestHeaders.Accept.Clear();
+            //_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(_mediaType));
+            _headersModifyer = headers => { };
+
+            var options = new RestClientOptions();
+            optionsAccessor(options);
+            _requestBuilder = new RequestBuilder(_client, options.DefaultSerializer, options.DeserializerFactory, _headersModifyer);
         }
 
-        public IRestHandler<TResponse> Put<TResponse>(string url, object request)
-        {
-            StringContent content = GetContent(request);
-            return new RestHandler<TResponse>(Request(() => _httpClient.PutAsync(url, content)));
-        }
+        //public IResponse<TResponse> Get<TResponse, TRequest>(string uri, TRequest request)
+        //    => Get<TResponse>(uri + _queryConverter.Serialize(request));
 
-        public IRestHandler Put(string url, object request)
-        {
-            return Put<string>(url, request);
-        }
+        public IRestRequest<TResponse> Get<TResponse>(string uri) 
+            => _requestBuilder.CreateRequest<TResponse>(uri, HttpMethod.Get);
 
-        private StringContent GetContent(object request)
-        {
-            string json = JsonConvert.SerializeObject(request);
-            return new StringContent(json, Encoding.UTF8, _mediaType);
-        }
+        public IRestRequest Post(string uri, object request) 
+            => _requestBuilder.CreateRequest(uri, HttpMethod.Post, request);
 
-        public IRestHandler<TResponse> Delete<TResponse>(string url)
-        {
-            return new RestHandler<TResponse>(Request(() => _httpClient.DeleteAsync(url)));
-        }
+        public IRestRequest<TResponse> Post<TResponse>(string uri, object request) 
+            => _requestBuilder.CreateRequest<TResponse>(uri, HttpMethod.Post, request);
 
-        private Func<Task<HttpResponseMessage>> Request(Func<Task<HttpResponseMessage>> request)
-        {
-            BeforeExecuted?.Invoke(_httpClient);
-            return request;
-        }
+        public IRestRequest Put(string uri, object request) 
+            => _requestBuilder.CreateRequest(uri, HttpMethod.Put, request);
 
-        public IRestHandler Delete(string url)
+        public IRestRequest<TResponse> Put<TResponse>(string uri, object request) 
+            => _requestBuilder.CreateRequest<TResponse>(uri, HttpMethod.Put, request);
+
+        public IRestRequest Delete(string uri) 
+            => _requestBuilder.CreateRequest(uri, HttpMethod.Delete);
+
+        public IRestRequest<TResponse> Delete<TResponse>(string uri) 
+            => _requestBuilder.CreateRequest<TResponse>(uri, HttpMethod.Delete);
+
+        public RestClient UseHeaders(Action<HttpRequestHeaders> headersAccessor)
         {
-            return Delete<string>(url);
+            _headersModifyer = headersAccessor;
+            return this;
         }
 
         public void Dispose()
         {
-            _httpClient.Dispose();
+            _client.Dispose();
         }
     }
 }
