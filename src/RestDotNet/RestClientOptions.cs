@@ -8,7 +8,7 @@ namespace RestDotNet
         public RestClientOptions()
         {
             DefaultSerializer = new JsonSerializer();
-            DeserializerFactory = new DeserializerFactory(new JsonDeserializer());
+            DeserializerFactory = new DeserializerFactory(new PlainTextDeserializer());
         }
 
         public ISerializer DefaultSerializer { get; }
