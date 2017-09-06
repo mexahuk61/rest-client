@@ -72,7 +72,9 @@ namespace RestDotNet
         {
             return token =>
             {
-                _headersModifyer?.Invoke(_client.DefaultRequestHeaders);
+                var headersProvider = new HeadersProvider();
+                headersProvider.UseHeaders(_headersModifyer);
+                headersProvider.Build(_client.DefaultRequestHeaders);
                 return request(token);
             };
         }

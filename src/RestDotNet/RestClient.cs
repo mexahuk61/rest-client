@@ -8,6 +8,7 @@ namespace RestDotNet
     {
         private readonly HttpClient _client;
         private readonly RequestBuilder _requestBuilder;
+        private Action<HttpRequestHeaders> _headersModifyer;
 
         public RestClient(Uri baseAddress)
             : this(baseAddress, options => { })
@@ -31,13 +32,12 @@ namespace RestDotNet
             _client = new HttpClient(messageHandler) { BaseAddress = baseAddress };
             //_client.DefaultRequestHeaders.Accept.Clear();
             //_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(_mediaType));
+            _headersModifyer = headers => { };
 
             var options = new RestClientOptions();
             optionsAccessor(options);
-            _requestBuilder = new RequestBuilder(_client, options.DefaultSerializer, options.DeserializerFactory, ModifyHeaders);
+            _requestBuilder = new RequestBuilder(_client, options.DefaultSerializer, options.DeserializerFactory, _headersModifyer);
         }
-
-        public Action<HttpRequestHeaders> ModifyHeaders { private get; set; }
 
         //public IResponse<TResponse> Get<TResponse, TRequest>(string uri, TRequest request)
         //    => Get<TResponse>(uri + _queryConverter.Serialize(request));
@@ -62,6 +62,12 @@ namespace RestDotNet
 
         public IRestRequest<TResponse> Delete<TResponse>(string uri) 
             => _requestBuilder.CreateRequest<TResponse>(uri, HttpMethod.Delete);
+
+        public RestClient UseHeaders(Action<HttpRequestHeaders> headersAccessor)
+        {
+            _headersModifyer = headersAccessor;
+            return this;
+        }
 
         public void Dispose()
         {
