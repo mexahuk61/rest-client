@@ -5,11 +5,11 @@
     <Title>RESTful client</Title>
     <Authors>Yury Shcherbakov</Authors>
     <PackageTags>REST API Client RESTful</PackageTags>
-    <Description>Simple client for RESTful services which works with HTTP status codes.</Description>
+    <Description>Simple .NET client for RESTful services which works with HTTP status codes.</Description>
     <PackageProjectUrl>http://restdotnet.com</PackageProjectUrl>
-    <PackageIconUrl>https://github.com/mexahuk61/rest-client/raw/master/icon.png</PackageIconUrl>
-    <RepositoryUrl>https://github.com/restdotnet</RepositoryUrl>
-    <Version>1.0.0-alpha</Version>
+    <PackageIconUrl>https://raw.githubusercontent.com/restdotnet/RestDotNet/master/icon.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/restdotnet/RestDotNet</RepositoryUrl>
+    <Version>1.0.0-beta</Version>
   </PropertyGroup>
 
   <ItemGroup>
