@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using RestDotNet.Deserializers;
+using RestDotNet.ObjectModel;
 
 namespace RestDotNet
 {
@@ -12,14 +12,14 @@ namespace RestDotNet
     {
         private readonly Func<CancellationToken, Task<HttpResponseMessage>> _request;
         private readonly IDeserializerFactory _deserializerFactory;
-        private readonly Dictionary<HttpStatusCode, Action<IDeserializer, string>> _сallbacks;
+        private readonly KeyValueCollection<HttpStatusCode, Action<IDeserializer, string>> _сallbacks;
 
         public RestHandler(Func<CancellationToken, Task<HttpResponseMessage>> request,
             IDeserializerFactory deserializerFactory)
         {
             _request = request;
             _deserializerFactory = deserializerFactory;
-            _сallbacks = new Dictionary<HttpStatusCode, Action<IDeserializer, string>>();
+            _сallbacks = new KeyValueCollection<HttpStatusCode, Action<IDeserializer, string>>();
         }
         
         public void RegisterCallback(HttpStatusCode code, Action action) 
@@ -41,7 +41,8 @@ namespace RestDotNet
 
             if (!_сallbacks.ContainsKey(code)) throw new UnhandledResponseException(code, content);
             IDeserializer deserializer = _deserializerFactory.GetDeserializer(message.Content?.Headers.ContentType.MediaType);
-            _сallbacks[code](deserializer, content);
+            foreach (Action<IDeserializer, string> action in _сallbacks.GetValues(code))
+                action(deserializer, content);
         }
     }
 }

@@ -110,7 +110,7 @@ namespace RestDotNet.Tests
 
         [Theory]
         [MemberData(nameof(GetMemberData))]
-        public async Task Only_Single_Callback_Invoked(HttpStatusCode code)
+        public async Task Only_Expected_Callback_Invoked(HttpStatusCode code)
         {
             List<HttpStatusCode> expected = new List<HttpStatusCode> { code };
             List<HttpStatusCode> act = new List<HttpStatusCode>();
@@ -121,6 +121,21 @@ namespace RestDotNet.Tests
                 .Where(statusCode => statusCode != code)
                 .ToList()
                 .ForEach(statusCode => handler.RegisterCallback(statusCode, () => act.Add(statusCode)));
+            await handler.HandleAsync();
+
+            Assert.Equal(expected, act);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetMemberData))]
+        public async Task Invoked_Every_Expected_Callback(HttpStatusCode code)
+        {
+            int expected = 2;
+            int act = 0;
+
+            IRestHandler handler = new RestHandler(CreateRequest(code), _deserializerFactory);
+            handler.RegisterCallback(code, () => act++);
+            handler.RegisterCallback(code, () => act++);
             await handler.HandleAsync();
 
             Assert.Equal(expected, act);
