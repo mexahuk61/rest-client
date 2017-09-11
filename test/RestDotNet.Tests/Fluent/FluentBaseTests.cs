@@ -1,6 +1,6 @@
 using Moq;
 
-namespace RestDotNet.Tests.FluentTests
+namespace RestDotNet.Tests.Fluent
 {
     public abstract class FluentBaseTests
     {

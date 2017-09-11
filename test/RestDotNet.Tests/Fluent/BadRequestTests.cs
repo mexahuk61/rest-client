@@ -3,7 +3,7 @@ using System.Net;
 using Moq;
 using Xunit;
 
-namespace RestDotNet.Tests.FluentTests
+namespace RestDotNet.Tests.Fluent
 {
     public class BadRequestTests : FluentBaseTests
     {
