@@ -11,7 +11,7 @@ namespace RestDotNet.Tests.FluentTests
         public override void Typed_Response_With_Content_Register_Callback()
         {
             TypedMock.Object.BadRequest((object res) => { });
-            HandlerMock.Verify(handler => handler.RegisterCallback(HttpStatusCode.BadRequest, It.IsAny<Action<object>>()), Times.Once);
+            TypedMock.Verify(handler => handler.RegisterCallback(HttpStatusCode.BadRequest, It.IsAny<Action<object>>()), Times.Once);
         }
 
         [Fact]
@@ -25,7 +25,7 @@ namespace RestDotNet.Tests.FluentTests
         public override void Typed_Response_Without_Content_Register_Callback()
         {
             TypedMock.Object.BadRequest(() => { });
-            HandlerMock.Verify(handler => handler.RegisterCallback(HttpStatusCode.BadRequest, It.IsAny<Action>()), Times.Once);
+            TypedMock.Verify(handler => handler.RegisterCallback(HttpStatusCode.BadRequest, It.IsAny<Action>()), Times.Once);
         }
         
         [Fact]
@@ -39,7 +39,7 @@ namespace RestDotNet.Tests.FluentTests
         public override void Untyped_Response_With_Content_Register_Callback()
         {
             UntypedMock.Object.BadRequest((object res) => { });
-            HandlerMock.Verify(handler => handler.RegisterCallback(HttpStatusCode.BadRequest, It.IsAny<Action<object>>()), Times.Once);
+            UntypedMock.Verify(handler => handler.RegisterCallback(HttpStatusCode.BadRequest, It.IsAny<Action<object>>()), Times.Once);
         }
 
         [Fact]
@@ -53,7 +53,7 @@ namespace RestDotNet.Tests.FluentTests
         public override void Untyped_Response_Without_Content_Register_Callback()
         {
             UntypedMock.Object.BadRequest(() => { });
-            HandlerMock.Verify(handler => handler.RegisterCallback(HttpStatusCode.BadRequest, It.IsAny<Action>()), Times.Once);
+            UntypedMock.Verify(handler => handler.RegisterCallback(HttpStatusCode.BadRequest, It.IsAny<Action>()), Times.Once);
         }
 
         [Fact]

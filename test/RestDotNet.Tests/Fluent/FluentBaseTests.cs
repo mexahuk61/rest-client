@@ -6,17 +6,9 @@ namespace RestDotNet.Tests.FluentTests
     {
         protected FluentBaseTests()
         {
-            HandlerMock = new Mock<IRestHandler>();
             UntypedMock = new Mock<IRestRequest>();
-            UntypedMock.Setup(request => request.Handler)
-                .Returns(HandlerMock.Object);
-
             TypedMock = new Mock<IRestRequest<object>>();
-            TypedMock.Setup(request => request.Handler)
-                .Returns(HandlerMock.Object);
         }
-
-        public Mock<IRestHandler> HandlerMock { get; }
 
         public Mock<IRestRequest> UntypedMock { get; }
 

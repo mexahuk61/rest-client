@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,28 +7,37 @@ namespace RestDotNet
 {
     public class RestRequest : IRestRequest
     {
+        private readonly IRestHandler _handler;
+
         public RestRequest(IRestHandler handler)
         {
-            Handler = handler;
+            _handler = handler;
         }
 
-        public IRestHandler Handler { get; }
+        public void RegisterCallback(HttpStatusCode code, Action action)
+            => _handler.RegisterCallback(code, action);
+
+        public void RegisterCallback<TResult>(HttpStatusCode code, Action<TResult> action)
+            => _handler.RegisterCallback(code, action);
 
         public Task ExecuteAsync() 
             => ExecuteAsync(CancellationToken.None);
 
         public Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            Handler.RegisterCallback(HttpStatusCode.OK, () => { });
-            return Handler.HandleAsync(cancellationToken);
+            _handler.RegisterCallback(HttpStatusCode.OK, () => { });
+            return _handler.HandleAsync(cancellationToken);
         }
     }
 
     public class RestRequest<TResponse> : RestRequest, IRestRequest<TResponse>
     {
+        private readonly IRestHandler _handler;
+
         public RestRequest(IRestHandler handler)
             : base(handler)
         {
+            _handler = handler;
         }
 
         public new Task<TResponse> ExecuteAsync()
@@ -36,8 +46,8 @@ namespace RestDotNet
         public new async Task<TResponse> ExecuteAsync(CancellationToken cancellationToken)
         {
             TResponse result = default(TResponse);
-            Handler.RegisterCallback(HttpStatusCode.OK, (TResponse content) => result = content);
-            await Handler.HandleAsync(cancellationToken);
+            _handler.RegisterCallback(HttpStatusCode.OK, (TResponse content) => result = content);
+            await _handler.HandleAsync(cancellationToken);
             return result;
         }
     }

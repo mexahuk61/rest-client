@@ -1,11 +1,15 @@
-﻿using System.Threading;
+﻿using System;
+using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RestDotNet
 {
     public interface IRestRequest
     {
-        IRestHandler Handler { get; }
+        void RegisterCallback(HttpStatusCode code, Action action);
+
+        void RegisterCallback<TReponse>(HttpStatusCode code, Action<TReponse> action);
 
         Task ExecuteAsync();
 
@@ -14,7 +18,9 @@ namespace RestDotNet
 
     public interface IRestRequest<TResponse>
     {
-        IRestHandler Handler { get; }
+        void RegisterCallback(HttpStatusCode code, Action action);
+
+        void RegisterCallback<TReponse>(HttpStatusCode code, Action<TReponse> action);
 
         Task<TResponse> ExecuteAsync();
 
