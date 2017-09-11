@@ -7,22 +7,28 @@ namespace RestDotNet
 {
     public static class RequestExtensions
     {
-        public static Task SuccessAsync<TResponse>(this IRestRequest<TResponse> request, Action<TResponse> action)
-            => SuccessAsync(request, action, CancellationToken.None);
-
-        public static Task SuccessAsync<TResponse>(this IRestRequest<TResponse> request, Action<TResponse> action, CancellationToken cancellationToken)
+        public static IRestRequest<TResponse> Ok<TResponse, TErrorResponse>(this IRestRequest<TResponse> request, Action<TErrorResponse> action)
         {
             request.RegisterCallback(HttpStatusCode.OK, action);
-            return request.ExecuteAsync(cancellationToken);
+            return request;
         }
 
-        public static Task SuccessAsync(this IRestRequest request, Action action)
-            => SuccessAsync(request, action, CancellationToken.None);
-
-        public static Task SuccessAsync(this IRestRequest request, Action action, CancellationToken cancellationToken)
+        public static IRestRequest<TResponse> Ok<TResponse>(this IRestRequest<TResponse> request, Action action)
         {
             request.RegisterCallback(HttpStatusCode.OK, action);
-            return request.ExecuteAsync(cancellationToken);
+            return request;
+        }
+
+        public static IRestRequest Ok<TErrorResponse>(this IRestRequest request, Action<TErrorResponse> action)
+        {
+            request.RegisterCallback(HttpStatusCode.OK, action);
+            return request;
+        }
+
+        public static IRestRequest Ok(this IRestRequest request, Action action)
+        {
+            request.RegisterCallback(HttpStatusCode.OK, action);
+            return request;
         }
 
 
