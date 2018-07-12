@@ -64,7 +64,7 @@ namespace RestDotNet.Tests
         public async Task Invoke_Typed_Callback_When_Content_Presented(HttpStatusCode code)
         {
             bool act = false;
-            
+
             IRestHandler handler = new RestHandler(CreateRequest(code, true), _deserializerFactory);
             handler.RegisterCallback(code, (object content) => act = true);
             await handler.HandleAsync();
@@ -114,7 +114,7 @@ namespace RestDotNet.Tests
         {
             List<HttpStatusCode> expected = new List<HttpStatusCode> { code };
             List<HttpStatusCode> act = new List<HttpStatusCode>();
-            
+
             IRestHandler handler = new RestHandler(CreateRequest(code), _deserializerFactory);
             handler.RegisterCallback(code, () => act.Add(code));
             GetStatusCodes()
@@ -147,13 +147,13 @@ namespace RestDotNet.Tests
             return message => Task.FromResult(new HttpResponseMessage(code) { Content = includeContent ? new StringContent("content") : null });
         }
 
-        private static IEnumerable<object[]> GetMemberData()
+        public static IEnumerable<object[]> GetMemberData()
         {
             return GetStatusCodes()
                 .Select(code => new object[] { code });
         }
-        
-        private static IEnumerable<HttpStatusCode> GetStatusCodes()
+
+        public static IEnumerable<HttpStatusCode> GetStatusCodes()
         {
             return Enum.GetValues(typeof(HttpStatusCode))
                 .Cast<HttpStatusCode>()

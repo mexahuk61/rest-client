@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>netstandard1.4</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Title>RESTful client</Title>
     <Authors>Yury Shcherbakov</Authors>
     <PackageTags>REST API Client RESTful</PackageTags>
@@ -9,11 +8,9 @@
     <PackageProjectUrl>http://restdotnet.com</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/restdotnet/RestDotNet/master/icon.png</PackageIconUrl>
     <RepositoryUrl>https://github.com/restdotnet/RestDotNet</RepositoryUrl>
-    <Version>1.0.0-beta2</Version>
+    <Version>1.0.0-beta3</Version>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
   </ItemGroup>
-
 </Project>
