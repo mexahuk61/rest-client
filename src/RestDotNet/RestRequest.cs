@@ -20,7 +20,7 @@ namespace RestDotNet
         public void RegisterCallback<TResult>(HttpStatusCode code, Action<TResult> action)
             => _handler.RegisterCallback(code, action);
 
-        public Task ExecuteAsync() 
+        public Task ExecuteAsync()
             => ExecuteAsync(CancellationToken.None);
 
         public Task ExecuteAsync(CancellationToken cancellationToken)
@@ -47,7 +47,7 @@ namespace RestDotNet
         {
             TResponse result = default(TResponse);
             _handler.RegisterCallback(HttpStatusCode.OK, (TResponse content) => result = content);
-            await _handler.HandleAsync(cancellationToken);
+            await _handler.HandleAsync(cancellationToken).ConfigureAwait(false);
             return result;
         }
     }

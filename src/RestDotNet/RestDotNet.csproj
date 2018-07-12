@@ -9,7 +9,7 @@
     <PackageProjectUrl>http://restdotnet.com</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/restdotnet/RestDotNet/master/icon.png</PackageIconUrl>
     <RepositoryUrl>https://github.com/restdotnet/RestDotNet</RepositoryUrl>
-    <Version>1.0.0-beta</Version>
+    <Version>1.0.0-beta2</Version>
   </PropertyGroup>
 
   <ItemGroup>

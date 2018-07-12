@@ -21,11 +21,11 @@ namespace RestDotNet
             _deserializerFactory = deserializerFactory;
             _сallbacks = new KeyValueCollection<HttpStatusCode, Action<IDeserializer, string>>();
         }
-        
-        public void RegisterCallback(HttpStatusCode code, Action action) 
+
+        public void RegisterCallback(HttpStatusCode code, Action action)
             => _сallbacks.Add(code, (deserializer, content) => action());
 
-        public void RegisterCallback<TReponse>(HttpStatusCode code, Action<TReponse> action) 
+        public void RegisterCallback<TReponse>(HttpStatusCode code, Action<TReponse> action)
             => _сallbacks.Add(code, (deserializer, content) => action(deserializer.Deserialize<TReponse>(content)));
 
         public Task HandleAsync()
@@ -33,9 +33,9 @@ namespace RestDotNet
 
         public async Task HandleAsync(CancellationToken cancellationToken)
         {
-            HttpResponseMessage message = await _request(cancellationToken);
+            HttpResponseMessage message = await _request(cancellationToken).ConfigureAwait(false);
             string content = message.Content != null
-                ? await message.Content.ReadAsStringAsync()
+                ? await message.Content.ReadAsStringAsync().ConfigureAwait(false)
                 : string.Empty;
             HttpStatusCode code = message.StatusCode;
 
